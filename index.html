@@ -1020,12 +1020,17 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
   body.hub-clean .hub-bar {
     flex-wrap: nowrap; padding: 9px 13px; gap: 11px;
   }
-  body.hub-clean .hub-bar .logo { flex: 0 0 auto; min-width: 0; }
-  body.hub-clean .hub-bar .logo-info { display: none; }
+  /* เอาโลโก้ออกด้วย เหลือชื่อสาขากับปุ่มออกจากระบบ
+     หัวบนมือถือจึงบอกแค่สองอย่างที่คนต้องรู้จริง ๆ คือ
+     ตอนนี้อยู่บัญชีไหน และจะออกได้ที่ไหน */
+  body.hub-clean .hub-bar .logo { display: none; }
+  /* ไม่มีโลโก้แล้ว ชื่อสาขาจึงเป็นของชิ้นแรกของแถว ต้องชิดซ้าย
+     ปุ่มไปชิดขวา ที่ว่างอยู่ตรงกลาง */
   body.hub-clean .hub-bar .topbar-actions {
-    flex: 1 1 auto; min-width: 0; width: auto; margin-left: 0;
-    justify-content: flex-end; gap: 9px;
+    flex: 1 1 auto; min-width: 0; width: 100%; margin-left: 0;
+    justify-content: space-between; gap: 9px;
   }
+  body.hub-clean .hub-user { margin-right: auto; }
   /* ชื่อสาขาต้องยอมย่อด้วย … เมื่อที่ไม่พอ ไม่งั้นมันดันปุ่มออกนอกจอ
      ต้องใส่ min-width:0 ให้ทุกชั้นที่ครอบอยู่ ไม่งั้น flex ไม่ยอมให้หด */
   body.hub-clean .hub-user { flex: 0 1 auto; min-width: 0; overflow: hidden; }
