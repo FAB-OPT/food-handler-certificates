@@ -964,6 +964,7 @@ body.hub-clean .hub-user-role {
 body.hub-clean .hub-icon-btn:first-of-type { margin-left: 2px; }
 body.hub-clean .hub-icon-btn:first-of-type::before { display: none; }
 body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
+.hub-btn-label { display: none; }
 
 @media (max-width: 720px) {
   /* บนมือถือทุกอย่างต้องอยู่แถวเดียว — ของเดิมตัดบรรทัดแล้วปุ่มไปกองข้างล่าง
@@ -999,7 +1000,27 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
   body.hub-clean .hub-user-role { display: none; }
   body.hub-clean .hub-user-nm { max-width: none; }
   body.hub-clean .hub-user { padding: 0; }
-  body.hub-clean .hub-bar .logo-sub { display: none; }
+  /* แบ่งสองแถว — ไม่ต้องแย่งที่กันแล้ว ทุกคนได้แสดงเต็ม */
+  body.hub-clean .hub-bar { flex-wrap: wrap; row-gap: 9px; padding: 10px 14px 11px; }
+  body.hub-clean .hub-bar .logo { flex: 1 1 100%; min-width: 0; }
+  body.hub-clean .hub-bar .logo-info { display: block; min-width: 0; }
+  body.hub-clean .hub-bar .logo-sub { display: block; font-size: 11px; }
+  body.hub-clean .hub-bar .logo-text { font-size: 14.5px; white-space: normal; }
+  body.hub-clean .hub-bar .topbar-actions {
+    flex: 1 1 100%; width: 100%; margin-left: 0;
+    justify-content: space-between; gap: 10px;
+  }
+  body.hub-clean .hub-user { flex: 1 1 auto; min-width: 0; }
+  body.hub-clean .hub-user-txt { align-items: flex-start; }
+  body.hub-clean .hub-user-nm { max-width: none; font-size: 13px; color: var(--gold); }
+  body.hub-clean .hub-user-role { display: none; }
+  /* ปุ่มมีคำกำกับ ไม่ต้องเดาว่าลูกศรแปลว่าอะไร */
+  body.hub-clean .hub-icon-btn.hub-icon-danger {
+    width: auto; height: 34px; padding: 0 13px; gap: 7px; border-radius: 9px;
+    border: 1px solid #f3c9c4; background: #fff5f4; color: #b42318;
+    font-family: 'Sarabun', sans-serif; font-size: 12.5px; font-weight: 700;
+  }
+  body.hub-clean .hub-icon-btn.hub-icon-danger .hub-btn-label { display: inline; }
 }
 
 
@@ -3020,7 +3041,7 @@ catch (e) { console.warn('Hub Firebase init failed', e); }
         <svg class="ico ico-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 8.9 19a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 5 8.9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9.5a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
       </button>
       <button class="hub-icon-btn hub-icon-danger" onclick="logout()" title="ออกจากระบบ" aria-label="ออกจากระบบ">
-        <svg class="ico ico-lg"><use href="#i-logout"/></svg>
+        <svg class="ico ico-lg"><use href="#i-logout"/></svg><span class="hub-btn-label">ออกจากระบบ</span>
       </button>
     </div>
   </div>
