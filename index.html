@@ -1013,23 +1013,27 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
   body.hub-clean .hub-user-role { display: none; }
   body.hub-clean .hub-user-nm { max-width: none; }
   body.hub-clean .hub-user { padding: 0; }
-  /* แบ่งสองแถว — ไม่ต้องแย่งที่กันแล้ว ทุกคนได้แสดงเต็ม */
-  body.hub-clean .hub-bar { flex-wrap: wrap; row-gap: 9px; padding: 10px 14px 11px; }
-  body.hub-clean .hub-bar .logo { flex: 1 1 100%; min-width: 0; }
-  body.hub-clean .hub-bar .logo-sub { font-size: 11.5px; }
-  body.hub-clean .hub-bar .logo-text { font-size: 15px; }
-
-  /* แถวล่างอยู่บนแถบสีอ่อน ๆ แยกตัวออกจากแถวชื่อระบบโดยไม่ต้องมีเส้นคั่น */
-
-  body.hub-clean .hub-bar .topbar-actions {
-    flex: 1 1 100%; width: 100%; margin-left: 0;
-    justify-content: space-between; gap: 10px;
+  /* แถวเดียว — ตัดชื่อระบบทิ้ง เหลือโลโก้ ชื่อสาขา และปุ่มออกจากระบบ
+     คนที่เปิดเข้ามาก็รู้อยู่แล้วว่าอยู่ระบบอะไร ชื่อระบบจึงเป็นของ
+     ที่ยอมสละได้ก่อนใครบนจอแคบ · โลโก้รูปยังอยู่ ไม่ได้เสียตัวตน
+     แถบเตี้ยลงจากสองแถวเหลือแถวเดียว ได้ที่คืนให้เนื้อหาข้างล่าง */
+  body.hub-clean .hub-bar {
+    flex-wrap: nowrap; padding: 9px 13px; gap: 11px;
   }
-  body.hub-clean .hub-user { flex: 1 1 auto; min-width: 0; }
-  body.hub-clean .hub-user-txt { align-items: flex-start; }
+  body.hub-clean .hub-bar .logo { flex: 0 0 auto; min-width: 0; }
+  body.hub-clean .hub-bar .logo-info { display: none; }
+  body.hub-clean .hub-bar .topbar-actions {
+    flex: 1 1 auto; min-width: 0; width: auto; margin-left: 0;
+    justify-content: flex-end; gap: 9px;
+  }
+  /* ชื่อสาขาต้องยอมย่อด้วย … เมื่อที่ไม่พอ ไม่งั้นมันดันปุ่มออกนอกจอ
+     ต้องใส่ min-width:0 ให้ทุกชั้นที่ครอบอยู่ ไม่งั้น flex ไม่ยอมให้หด */
+  body.hub-clean .hub-user { flex: 0 1 auto; min-width: 0; overflow: hidden; }
+  body.hub-clean .hub-user-txt { align-items: flex-start; min-width: 0; overflow: hidden; }
   body.hub-clean .hub-user-nm {
     max-width: none; font-size: 13.5px; font-weight: 800;
     color: var(--brand, #3f4550); letter-spacing: -.1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
   }
   body.hub-clean .hub-user-role { display: none; }
   /* ปุ่มมีคำกำกับ ไม่ต้องเดาว่าลูกศรแปลว่าอะไร */
