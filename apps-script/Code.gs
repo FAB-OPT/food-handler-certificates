@@ -1661,3 +1661,68 @@ function setupChecklistBackup() {
   ScriptApp.newTrigger('backupChecklistDaily').timeBased().atHour(3).everyDays(1).create();
   return { ok: true, msg: 'ตั้งให้สำรองข้อมูลเช็คลิสต์ทุกวันตอนตี 3 แล้ว' };
 }
+
+/* =======================================================================
+   ตรวจผลการสำรองข้อมูลเช็คลิสต์
+
+   ทำไมต้องมี: backupChecklistBackfill() คืนค่าเป็น object แต่บันทึกการดำเนินการ
+   ของ Apps Script ไม่โชว์ค่าที่คืนกลับ เห็นแค่ว่า "ดำเนินการเสร็จแล้ว"
+   ซึ่งบอกไม่ได้เลยว่าสำรองไปกี่วัน ครบหรือยัง
+
+   . checkChecklistBackup() = สรุปว่าในโฟลเดอร์มีอะไรบ้าง และวันไหนยังขาด
+   ======================================================================= */
+function checkChecklistBackup() {
+  var folder = _ckbFolder();
+  var files = folder.getFiles();
+  var days = [], small = [], bytes = 0;
+  while (files.hasNext()) {
+    var f = files.next(), n = f.getName();
+    bytes += f.getSize();
+    if (n.indexOf('ck-daily-') === 0) days.push(n.slice(9, 19));
+    else if (n.indexOf('ck-small-') === 0) small.push(n.slice(9, 19));
+  }
+  days.sort(); small.sort();
+
+  /* หาวันที่ยังขาดในช่วงที่สำรองไปแล้ว — วันที่ไม่มีใบตรวจเลยจะไม่มีไฟล์
+     ซึ่งเป็นเรื่องปกติ (ร้านปิด/ยังไม่ถึงวัน) จึงบอกไว้เฉย ๆ ไม่ใช่ข้อผิดพลาด */
+  var gaps = [];
+  if (days.length > 1) {
+    var cur = new Date(days[0] + 'T00:00:00Z');
+    var last = new Date(days[days.length - 1] + 'T00:00:00Z');
+    var have = {};
+    days.forEach(function (d) { have[d] = 1; });
+    while (cur <= last) {
+      var s = Utilities.formatDate(cur, 'UTC', 'yyyy-MM-dd');
+      if (!have[s]) gaps.push(s);
+      cur = new Date(cur.getTime() + 86400000);
+    }
+  }
+
+  var out = {
+    โฟลเดอร์: CKB_FOLDER,
+    ไฟล์รายวัน: days.length + ' วัน',
+    ช่วงวันที่: days.length ? (days[0] + ' ถึง ' + days[days.length - 1]) : 'ยังไม่มี',
+    ไฟล์ก้อนเล็ก: small.length ? small.join(', ') : 'ยังไม่มี',
+    ขนาดรวม: (bytes / 1024 / 1024).toFixed(1) + ' MB',
+    วันที่ไม่มีไฟล์: gaps.length ? (gaps.length + ' วัน: ' + gaps.join(', ')) : 'ไม่มี',
+    ตัวตั้งเวลา: 'ยังไม่ได้ตั้ง'
+  };
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'backupChecklistDaily') out['ตัวตั้งเวลา'] = 'ตั้งแล้ว (ทุกวัน)';
+  });
+
+  Logger.log(JSON.stringify(out, null, 1));
+  return out;
+}
+
+/* เขียนผลลัพธ์ลงบันทึกการดำเนินการด้วย จะได้เห็นว่าทำอะไรไปบ้างโดยไม่ต้องเรียกตัวตรวจแยก */
+function backupChecklistBackfillLogged() {
+  var r = backupChecklistBackfill();
+  Logger.log(JSON.stringify(r));
+  return r;
+}
+function backupChecklistDailyLogged() {
+  var r = backupChecklistDaily();
+  Logger.log(JSON.stringify(r));
+  return r;
+}
