@@ -963,7 +963,7 @@ body.hub-clean .hub-user {
 }
 body.hub-clean .hub-user-txt {
   display: flex; flex-direction: column; align-items: flex-end;
-  line-height: 1.25; min-width: 0;
+  line-height: 1.7; min-width: 0;
 }
 body.hub-clean .hub-user-nm {
   font-size: 13.5px; font-weight: 700; color: var(--text);
@@ -1034,11 +1034,12 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
   /* ชื่อสาขาต้องยอมย่อด้วย … เมื่อที่ไม่พอ ไม่งั้นมันดันปุ่มออกนอกจอ
      ต้องใส่ min-width:0 ให้ทุกชั้นที่ครอบอยู่ ไม่งั้น flex ไม่ยอมให้หด */
   body.hub-clean .hub-user { flex: 0 1 auto; min-width: 0; overflow: hidden; }
-  body.hub-clean .hub-user-txt { align-items: flex-start; min-width: 0; overflow: hidden; }
+  body.hub-clean .hub-user-txt { align-items: flex-start; min-width: 0; line-height: 1.7; }
   body.hub-clean .hub-user-nm {
     max-width: none; font-size: 13.5px; font-weight: 800;
     color: var(--brand, #3f4550); letter-spacing: -.1px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+    line-height: 1.7; padding-block: 1px;
   }
   body.hub-clean .hub-user-role { display: none; }
   /* ปุ่มมีคำกำกับ ไม่ต้องเดาว่าลูกศรแปลว่าอะไร */
