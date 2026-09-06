@@ -1023,10 +1023,7 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
   body.hub-clean .hub-bar .logo-sub { color: #9aa0a8; }
 
   /* แถวล่างอยู่บนแถบสีอ่อน ๆ แยกตัวออกจากแถวชื่อระบบโดยไม่ต้องมีเส้นคั่น */
-  body.hub-clean .hub-bar .topbar-actions {
-    background: linear-gradient(90deg, rgba(255,122,26,.07), rgba(255,122,26,.02));
-    border-radius: 11px; padding: 7px 8px 7px 12px;
-  }
+
   body.hub-clean .hub-bar .topbar-actions {
     flex: 1 1 100%; width: 100%; margin-left: 0;
     justify-content: space-between; gap: 10px;
@@ -1034,24 +1031,30 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
   body.hub-clean .hub-user { flex: 1 1 auto; min-width: 0; }
   body.hub-clean .hub-user-txt { align-items: flex-start; }
   body.hub-clean .hub-user-nm {
-    max-width: none; font-size: 13px; font-weight: 800;
-    color: #c2410c; letter-spacing: -.1px;
+    max-width: none; font-size: 13.5px; font-weight: 800;
+    color: var(--brand, #3f4550); letter-spacing: -.1px;
   }
   /* จุดสีนำหน้าชื่อ บอกว่ากำลังใช้งานอยู่ในบัญชีนี้ */
   body.hub-clean .hub-user-nm::before {
     content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--gold); margin-right: 7px; vertical-align: middle;
-    box-shadow: 0 0 0 3px rgba(255,122,26,.18);
+    background: var(--brand, #9aa0a8); margin-right: 8px; vertical-align: middle;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand, #9aa0a8) 18%, transparent);
   }
   body.hub-clean .hub-user-role { display: none; }
   /* ปุ่มมีคำกำกับ ไม่ต้องเดาว่าลูกศรแปลว่าอะไร */
   body.hub-clean .hub-icon-btn.hub-icon-danger {
-    width: auto; height: 34px; padding: 0 13px; gap: 7px; border-radius: 9px;
-    border: 1px solid rgba(180,35,24,.22); color: #b42318;
-    background: linear-gradient(180deg, #fff, #fff1ef);
-    box-shadow: 0 1px 2px rgba(180,35,24,.08);
-    font-family: 'Sarabun', sans-serif; font-size: 12.5px; font-weight: 700;
+    width: auto; height: 36px; padding: 0 15px; gap: 8px; border-radius: 999px;
+    border: 0; color: #fff;
+    background: linear-gradient(180deg, #363b47, #23272f);
+    box-shadow: 0 2px 6px rgba(22,23,27,.22);
+    font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 700;
+    letter-spacing: -.1px;
   }
+  body.hub-clean .hub-icon-btn.hub-icon-danger:hover,
+  body.hub-clean .hub-icon-btn.hub-icon-danger:active {
+    background: linear-gradient(180deg, #23272f, #16181d); color: #fff;
+  }
+  body.hub-clean .hub-icon-btn.hub-icon-danger .ico { width: 16px; height: 16px; }
   body.hub-clean .hub-icon-btn.hub-icon-danger .hub-btn-label { display: inline; }
 }
 
@@ -4485,6 +4488,13 @@ function showMenuView() {
 function _renderMenuUserTag() {
   var tag = document.getElementById('menuBranchTag');
   if (!tag) return;
+  /* ชื่อสาขาย้อมสีตามแบรนด์ที่ล็อกอินเข้ามา ไม่มีแบรนด์ก็ถอยไปใช้สีเทาเข้ม
+     ใช้ตัวเดียวกับที่หน้าต้อนรับเคยใช้ จะได้ไม่มีสองแหล่งความจริง */
+  try {
+    var _bc = _welcomeColor();
+    if (_bc) tag.style.setProperty('--brand', _bc);
+    else tag.style.removeProperty('--brand');
+  } catch (e) { tag.style.removeProperty('--brand'); }
   if (isAdminMode) {
     var u = findUserByCode(branchPin);
     var fullName = u ? (u.name || u.nick || '') : '';
