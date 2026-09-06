@@ -1062,6 +1062,18 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
     background: #e7e9ed; color: #23272f;
   }
   body.hub-clean .hub-icon-btn.hub-icon-danger .hub-btn-label { display: inline; }
+
+  /* ชื่อสาขายาวกว่าที่เหลือ โดยเฉพาะโหมดแอดมินที่มีปุ่มเฟืองเพิ่มมาอีกอัน
+     บีบปุ่มให้เล็กลงแทนที่จะตัดชื่อ เพราะชื่อคือข้อมูล ปุ่มเป็นแค่ทางออก
+     ปุ่มยังกดง่ายอยู่เพราะสูง 34px เกินขนาดนิ้วขั้นต่ำที่ 32px */
+  body.hub-clean .hub-icon-btn.hub-icon-danger {
+    height: 34px; padding: 3px 12px 3px 3px; gap: 7px; font-size: 12.5px;
+  }
+  body.hub-clean .hub-icon-btn.hub-icon-danger .ico {
+    width: 28px; height: 28px; padding: 6.5px;
+  }
+  body.hub-clean .hub-icon-btn:not(.hub-icon-danger) { width: 30px; height: 30px; }
+  body.hub-clean .hub-user-nm { font-size: 13px; }
 }
 
 
