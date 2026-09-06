@@ -1034,27 +1034,27 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
     max-width: none; font-size: 13.5px; font-weight: 800;
     color: var(--brand, #3f4550); letter-spacing: -.1px;
   }
-  /* จุดสีนำหน้าชื่อ บอกว่ากำลังใช้งานอยู่ในบัญชีนี้ */
-  body.hub-clean .hub-user-nm::before {
-    content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--brand, #9aa0a8); margin-right: 8px; vertical-align: middle;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand, #9aa0a8) 18%, transparent);
-  }
   body.hub-clean .hub-user-role { display: none; }
   /* ปุ่มมีคำกำกับ ไม่ต้องเดาว่าลูกศรแปลว่าอะไร */
+  /* แคปซูลเทาอ่อน ไอคอนแยกออกมาเป็นวงกลมขาวของตัวเอง
+     เป็นกลาง ไม่ชนกับสีแบรนด์ไหนเลย และไม่ทำให้การออกจากระบบดูน่ากลัว
+     ทั้งที่เป็นสิ่งที่คนกดน้อยที่สุดในหน้า */
   body.hub-clean .hub-icon-btn.hub-icon-danger {
-    width: auto; height: 36px; padding: 0 15px; gap: 8px; border-radius: 999px;
-    border: 0; color: #fff;
-    background: linear-gradient(180deg, #363b47, #23272f);
-    box-shadow: 0 2px 6px rgba(22,23,27,.22);
+    width: auto; height: 38px; padding: 4px 15px 4px 4px; gap: 9px;
+    border: 0; border-radius: 999px;
+    background: #f1f2f5; color: #494d55;
     font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 700;
-    letter-spacing: -.1px;
+    letter-spacing: -.1px; box-shadow: none;
+  }
+  body.hub-clean .hub-icon-btn.hub-icon-danger .ico {
+    width: 30px; height: 30px; padding: 7px; box-sizing: border-box;
+    border-radius: 50%; background: #fff; color: #b42318;
+    box-shadow: 0 1px 2px rgba(15,23,42,.12);
   }
   body.hub-clean .hub-icon-btn.hub-icon-danger:hover,
   body.hub-clean .hub-icon-btn.hub-icon-danger:active {
-    background: linear-gradient(180deg, #23272f, #16181d); color: #fff;
+    background: #e7e9ed; color: #23272f;
   }
-  body.hub-clean .hub-icon-btn.hub-icon-danger .ico { width: 16px; height: 16px; }
   body.hub-clean .hub-icon-btn.hub-icon-danger .hub-btn-label { display: inline; }
 }
 
