@@ -1,0 +1,1464 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#ff641e">
+<title>ระบบแบบฟอร์มออนไลน์ — FAB Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--orange:#ff641e;--orange-soft:#fff3ec;--ink:#17191d;--muted:#667085;--line:#e5e7eb;--bg:#f5f6f8;--card:#fff;--green:#198754;--red:#b42318;--shadow:0 8px 28px rgba(16,24,40,.06)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans Thai","Leelawadee UI",Tahoma,sans-serif;font-size:15px;line-height:1.62;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+a{color:var(--orange)}
+
+/* ── แถบบน ── */
+.topbar{background:#fff;border-bottom:1px solid var(--line);padding:12px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:30;flex-wrap:wrap}
+.btn-back{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font-weight:700;color:#555}
+.btn-back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.tb-title{font-size:17px;font-weight:800;margin:0}
+.tb-title small{display:block;color:var(--muted);font-size:13px;font-weight:400}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.who-tag{display:flex;align-items:center;gap:9px;background:#f7f8fa;border:1px solid var(--line);border-radius:99px;padding:5px 13px 5px 5px}
+.who-av{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--orange);color:#fff;font-weight:800;font-size:13px}
+.who-nm{font-weight:700;font-size:13.5px;line-height:1.2}
+.who-role{color:var(--muted);font-size:11.5px;line-height:1.2}
+.navtabs{display:flex;gap:6px;flex-wrap:wrap}
+.navtab{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 15px;font-weight:700;color:#555;font-size:14px}
+.navtab.on{background:var(--orange);border-color:var(--orange);color:#fff}
+
+main{padding:22px clamp(12px,3vw,26px) 70px;max-width:1320px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:clamp(16px,3vw,24px);margin-bottom:18px}
+h2{margin:0 0 4px;font-size:19px;font-weight:800;letter-spacing:-.01em}
+h3{margin:0 0 4px;font-size:16px;font-weight:800}
+.sub{color:var(--muted);margin:0 0 18px;font-size:14px}
+.muted{color:var(--muted)}
+input,select,textarea{width:100%;border:1px solid #d9dde4;border-radius:10px;background:#fff;padding:10px 12px;color:var(--ink);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,100,30,.12)}
+textarea{min-height:88px;resize:vertical}
+textarea.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;min-height:150px}
+select:disabled,input:disabled{background:#f4f5f7;color:#8a919c}
+label{font-weight:700;font-size:14px;display:block;margin-bottom:6px}
+.field{margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.btn{border:0;border-radius:10px;padding:10px 18px;font-weight:750}
+.btn-primary{background:var(--orange);color:#fff}.btn-primary:hover{background:#e95210}
+.btn-secondary{background:#eef0f3;color:#333}
+.btn-danger{background:#fff1f0;color:var(--red);border:1px solid #f5c9c4}
+.btn-sm{padding:6px 12px;font-size:13.5px;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:inline-block;border-radius:99px;padding:3px 11px;font-size:12.5px;font-weight:700}
+.pill.silver{background:#eef1f5;color:#475467}
+.pill.gold{background:#fff5da;color:#8a6100}
+.pill.pass,.pill.open{background:#eaf7ef;color:#146c43}
+.pill.fail{background:#fff1f0;color:var(--red)}
+.pill.off,.pill.closed{background:#f2f4f7;color:#98a2b3}
+.pill.draft{background:#fff8e6;color:#8a6100}
+.pill.branch{background:var(--orange-soft);color:#b33a05}
+.notice{display:none;margin-bottom:16px;padding:12px 15px;border-radius:11px;font-size:14.5px;line-height:1.55}
+.notice.show{display:block}
+.notice.err{background:#fff1f0;color:var(--red);border:1px solid #f5c9c4}
+.notice.warn{background:#fff8e6;color:#8a6100;border:1px solid #f2dfae}
+.notice.ok{background:#eaf7ef;color:#146c43;border:1px solid #bfe3ce}
+.empty{padding:44px 20px;text-align:center;color:var(--muted)}
+.loading{padding:50px;text-align:center;color:var(--muted)}
+
+/* ── รายการฟอร์ม ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.form-card{border:1px solid var(--line);border-radius:16px;background:#fff;padding:20px;display:flex;flex-direction:column;gap:10px;transition:.16s ease}
+.form-card.clickable{cursor:pointer}
+.form-card.clickable:hover{border-color:#ffc4a7;box-shadow:0 10px 26px rgba(255,100,30,.10);transform:translateY(-2px)}
+.form-card .fc-emoji{font-size:30px;line-height:1}
+.form-card h3{margin:0}
+.form-card p{margin:0;color:var(--muted);font-size:14px}
+.fc-foot{margin-top:auto;padding-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+
+/* ── ตาราง ── */
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
+th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{background:#fafbfc;font-weight:700;color:#4b5563;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#fcfcfd}
+.score{font-weight:800;font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
+.stat{border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:#fff}
+.stat b{display:block;font-size:25px;font-weight:800;line-height:1.25}
+.stat span{color:var(--muted);font-size:13px}
+
+/* ── การกรอกฟอร์ม ── */
+.flow-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.eyebrow{margin:0 0 3px;color:var(--orange);font-weight:800;font-size:13.5px}
+.progress{height:7px;background:#e9ebef;border-radius:99px;overflow:hidden;margin-top:7px;min-width:150px}
+.progress span{display:block;height:100%;width:0;background:var(--orange);transition:width .25s ease}
+.who-row{display:flex;gap:9px;flex-wrap:wrap;margin:-2px 0 18px}
+.scale-note{background:#f8f9fa;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:20px;color:#4b5563;font-size:14px}
+.scale-note b{color:var(--ink)}
+.scale-note ul{margin:8px 0 0;padding-left:18px}
+.section-head{margin:0 0 6px;padding-left:12px;border-left:4px solid var(--orange);font-size:18px;font-weight:800}
+.qlist{display:grid;gap:13px;margin-top:18px}
+.question{border:1px solid var(--line);border-radius:14px;padding:17px}
+.question.unanswered{border-color:#f3c1bb;background:#fffafa}
+.question p{margin:0 0 13px;font-weight:600}
+.qnum{color:var(--orange);font-weight:800;margin-right:6px}
+.rating-head,.rating{display:grid;gap:8px}
+.rating-head{margin:0 0 8px;color:var(--muted);font-size:11.5px;text-align:center}
+.rating label{position:relative;cursor:pointer;text-align:center;border:1px solid var(--line);border-radius:9px;padding:10px 4px;font-size:15px;color:#555;background:#fff;font-weight:600}
+.rating input{position:absolute;opacity:0;pointer-events:none}
+.rating label:has(input:checked){background:var(--orange);color:#fff;border-color:var(--orange);font-weight:800}
+.rating label.na:has(input:checked){background:#667085;border-color:#667085}
+.choice-list{display:grid;gap:9px}
+.choice-list label{display:flex;gap:10px;align-items:center;font-weight:400;padding:11px 13px;border:1px solid var(--line);border-radius:11px;cursor:pointer}
+.choice-list label:has(input:checked){border-color:var(--orange);background:var(--orange-soft)}
+.choice-list input{width:18px;height:18px;accent-color:var(--orange);flex:0 0 auto}
+.actions{display:flex;justify-content:space-between;gap:12px;margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+.success{text-align:center;padding:36px 10px}
+.success-icon{width:72px;height:72px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;background:#eaf7ef;color:var(--green);font-size:36px;font-weight:900}
+.success p{color:var(--muted);max-width:540px;margin:10px auto 24px}
+
+/* ── กล่องซ้อน ── */
+.modal{display:none;position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:60;padding:18px;overflow-y:auto}
+.modal.show{display:block}
+.modal-box{max-width:860px;margin:18px auto;background:#fff;border-radius:16px;padding:24px}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
+.sec-bar{height:8px;background:#eef0f3;border-radius:99px;overflow:hidden;margin-top:5px}
+.sec-bar span{display:block;height:100%;background:var(--orange)}
+.sec-row{margin-bottom:13px}
+.sec-row .top{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.qtable{width:100%;min-width:0;font-size:13.5px;margin-top:6px}
+.qtable td:last-child{text-align:right;font-weight:800;width:64px}
+.qv1{color:var(--red)}.qv2{color:#b54708}.qv3{color:#475467}.qv4{color:#146c43}.qv5{color:#0b6b3a}.qvna{color:#98a2b3}
+details{border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:10px}
+summary{font-weight:700;cursor:pointer}
+.txtblock{background:#f8f9fa;border-radius:10px;padding:11px 13px;margin-top:7px;white-space:pre-wrap;font-size:14px}
+
+/* ── ตัวแก้ไขฟอร์ม ── */
+.sec-edit{border:1px solid var(--line);border-radius:13px;padding:15px;margin-bottom:13px;background:#fcfcfd}
+.sec-edit .sec-top{display:grid;grid-template-columns:70px 1fr 90px auto;gap:9px;align-items:end;margin-bottom:11px}
+.q-edit{display:flex;gap:8px;align-items:flex-start;margin-bottom:7px}
+.q-edit textarea{min-height:44px;font-size:14px}
+.q-edit .qi{flex:0 0 30px;padding-top:11px;color:var(--muted);font-size:13px;text-align:right}
+
+@media(max-width:820px){
+  .topbar{padding:10px 12px;gap:9px}
+  .tb-title{font-size:15px}.tb-title small{display:none}
+  .who-tag{padding:4px 10px 4px 4px}.who-nm{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  main{padding:16px 12px 60px}
+  .grid2{grid-template-columns:1fr}
+  .question{padding:14px 12px}.rating{gap:5px}.rating label{padding:10px 1px;font-size:14px}
+  .rating-head{gap:5px;font-size:10px}
+  .actions .btn{flex:1;padding:12px 8px}
+  .sec-edit .sec-top{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="btn-back" onclick="backToHub()" title="กลับหน้าหลัก">
+    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg><span>กลับหน้าหลัก</span>
+  </button>
+  <div><p class="tb-title">ระบบแบบฟอร์มออนไลน์<small>แบบประเมิน · แบบสำรวจ · แบบเก็บข้อมูล</small></p></div>
+  <div class="tb-right">
+    <nav class="navtabs" id="navtabs"></nav>
+    <div id="whoTag"></div>
+  </div>
+</div>
+
+<main>
+  <div class="notice" id="msg"></div>
+  <div id="view"><div class="loading">กำลังโหลด…</div></div>
+</main>
+
+<div class="modal" id="modal"><div class="modal-box" id="modalBox"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   ระบบแบบฟอร์มออนไลน์ — โมดูลของ FAB Operations Hub
+
+   ตัวคำถามไม่ได้ฝังในไฟล์นี้ แต่เก็บเป็นข้อมูลในตาราง of_forms
+   เพิ่มฟอร์มชุดใหม่ทำผ่านแท็บ "จัดการฟอร์ม" ได้เลย ไม่ต้องแก้โค้ด
+   (ชุด Silver/Gold ใน SEED ด้านล่างเป็นแค่ค่าตั้งต้นครั้งแรกเท่านั้น)
+
+   ตัวตนผู้กรอกมาจาก fab_session ของฮับ ไม่ให้พิมพ์ชื่อเอง
+   ผลจะได้ไม่หลงคน และล็อกการตอบซ้ำได้จริง
+   ══════════════════════════════════════════════════════════════════ */
+const SB_URL = 'https://pzspcjqlxoqnbtvlfjsy.supabase.co';
+const SB_KEY = 'sb_publishable_n1w7k8mdxGbtaHKZ4xnNWA_wxUHhEtP';
+
+const SB  = window.supabase.createClient(SB_URL, SB_KEY);
+const $   = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+
+function backToHub(){ window.location.href = '../index.html'; }
+
+/* ── ตัวตนผู้ใช้ จากเซสชันของฮับ ────────────────────────────────── */
+const ME = (function(){
+  let s = null;
+  try{ s = JSON.parse(localStorage.getItem('fab_session') || 'null'); }catch(e){}
+  const role   = (s && s.role) || sessionStorage.getItem('fab_role') || '';
+  const branch = (s && (s.branchName || s.name)) || sessionStorage.getItem('fab_branch_name') || '';
+  const code   = (s && (s.code || s.branchCode)) || sessionStorage.getItem('fab_branch_pin') || '';
+  const name   = (s && s.name) || branch || '';
+  const isBranch = role === 'branch';
+  return {
+    ok: !!code, code, name, nick: (s && s.nick) || '', role,
+    title: (s && s.title) || (isBranch ? 'สาขา' : role.toUpperCase()),
+    branch: isBranch ? branch : ((s && s.branchName) || ''),
+    isBranch,
+    isAdmin: !!code && !isBranch      // ทุก role ที่ไม่ใช่สาขา = ทีมสำนักงาน เห็นผลได้
+  };
+})();
+
+/* ── สถานะหน้าจอ ─────────────────────────────────────────────────── */
+let forms = [], people = [], responses = [];
+let tab = 'list';
+let fill = null;    // {form, subject, answers, texts, panel, panels, sections}
+let editing = null; // ฟอร์มที่กำลังแก้ในแท็บจัดการ
+
+function msg(html, kind){
+  const el = $('#msg');
+  el.className = 'notice ' + (kind || 'ok') + ' show';
+  el.innerHTML = html;
+  window.scrollTo({top:0, behavior:'smooth'});
+  clearTimeout(msg._t);
+  if (kind !== 'err') msg._t = setTimeout(()=>{ el.className = 'notice'; }, 7000);
+}
+function clearMsg(){ $('#msg').className = 'notice'; }
+function closeModal(){ $('#modal').classList.remove('show'); }
+$('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+
+/* ══════════════════════════════════════════════════════════════════
+   ค่าตั้งต้นครั้งแรก — แบบประเมิน Silver / Gold
+   ใส่ลงตารางครั้งเดียวตอนยังไม่มีฟอร์มอะไรเลย จากนั้นแก้ผ่านหน้าจอ
+   ══════════════════════════════════════════════════════════════════ */
+const SCALE_1_5 = [
+  { v:1, label:'1', hint:'ยังทำไม่ได้' },
+  { v:2, label:'2', hint:'ทำได้บางส่วน' },
+  { v:3, label:'3', hint:'ตามมาตรฐาน' },
+  { v:4, label:'4', hint:'ดีสม่ำเสมอ' },
+  { v:5, label:'5', hint:'เป็นแบบอย่าง' },
+  { v:'na', label:'N/A', hint:'ยังไม่ได้ดู' }
+];
+
+const Q = {
+ ss:[ /* Silver – บริการ */
+  ['A',15,'บุคลิกภาพ ความสะอาด และการเป็นแบบอย่าง',[
+   'แต่งกายถูกระเบียบ สะอาด เรียบร้อย ครบทุกชิ้น (ยูนิฟอร์ม ป้ายชื่อ ทรงผม เล็บ รองเท้า) ทุกวันโดยไม่ต้องมีคนเตือน',
+   'รักษาสุขอนามัยส่วนบุคคลและปฏิบัติตามมาตรฐาน Food Safety (การล้างมือ การจับภาชนะ การจับอาหาร)',
+   'มีบุคลิกภาพและกิริยาที่ดี ยิ้ม ทักทาย น้ำเสียงและคำพูดสุภาพ ทั้งกับลูกค้าและเพื่อนร่วมงาน',
+   'ตรงต่อเวลา มีวินัย ปฏิบัติตามกฎระเบียบร้านอย่างสม่ำเสมอ จนพนักงานคนอื่นถือเป็นแบบอย่าง']],
+  ['B',20,'ความรู้ในมาตรฐานและขั้นตอนการทำงาน',[
+   'อธิบายมาตรฐานและขั้นตอนงานบริการ (Service Steps) ได้ครบตั้งแต่ต้อนรับจนส่งลูกค้ากลับ',
+   'อธิบายขั้นตอนงานเปิดร้าน–ปิดร้าน และ Checklist ประจำวันของฝ่ายบริการได้',
+   'รู้รายละเอียดเมนู วัตถุดิบ สิ่งที่ลูกค้าอาจแพ้ ระยะเวลาทำอาหาร และโปรโมชั่นปัจจุบัน',
+   'รู้มาตรฐานความสะอาดของพื้นที่บริการ และตารางทำความสะอาดประจำวัน/ประจำสัปดาห์',
+   'รู้มาตรฐานการเสิร์ฟที่ถูกต้อง (การเซตโต๊ะ ลำดับการเสิร์ฟ ภาชนะ อุณหภูมิ ความพร้อมของอาหาร)']],
+  ['C',30,'ปฏิบัติงานได้จริง — ครบทุกตำแหน่งของฝ่ายบริการ',[
+   'ตำแหน่ง Host: ต้อนรับ จัดคิว จัดโต๊ะ และพาลูกค้าเข้าที่นั่งได้เหมาะสม',
+   'รับรายการอาหารและใช้ระบบ POS: ทวนรายการถูกต้อง คีย์ไม่ผิด และแนะนำ/เชียร์ขายเมนูได้',
+   'เสิร์ฟและดูแลระหว่างมื้อ: เสิร์ฟถูกโต๊ะถูกคน เก็บ–เติม และดูแลความต้องการลูกค้าได้ต่อเนื่อง',
+   'บาร์เครื่องดื่ม: เตรียมเครื่องดื่มตามสูตร คุมคุณภาพ และรักษาความสะอาดพื้นที่บาร์',
+   'แคชเชียร์: รับชำระเงิน ตรวจสอบบิล ปิดการขาย และจัดการเงินได้ถูกต้องครบถ้วน',
+   'เคลียร์โต๊ะและเซตโต๊ะได้รวดเร็วถูกต้อง โดยเฉพาะช่วงลูกค้าแน่น (Peak)',
+   'สลับหมุนเวียนทำงานได้ครบทุกตำแหน่งของฝ่ายบริการ โดยไม่ต้องมีคนคอยควบคุม']],
+  ['D',20,'การแก้ไขปัญหาเบื้องต้น',[
+   'สังเกตเห็นงานหรือพื้นที่ที่ไม่เป็นไปตามมาตรฐาน และลงมือแก้ไขทันทีโดยไม่ต้องรอสั่ง',
+   'รับมือข้อร้องเรียนของลูกค้าเบื้องต้นได้ (รับฟัง ขอโทษ แก้ไข และส่งต่อเมื่อเกินขอบเขต)',
+   'แก้ปัญหาหน้างานพื้นฐานได้ เช่น ออร์เดอร์ผิด อาหารออกช้า โต๊ะไม่พอ อุปกรณ์มีปัญหา',
+   'รู้ขอบเขตของตนเอง ว่าเรื่องใดแก้ไขเองได้ และเรื่องใดต้องรายงานหัวหน้า/ผู้จัดการทันที']],
+  ['E',15,'การถ่ายทอดและสอนงาน',[
+   'อธิบายและสาธิตขั้นตอนการทำงานให้พนักงานใหม่เข้าใจและทำตามได้',
+   'ให้คำแนะนำหรือเตือนเพื่อนร่วมงานได้อย่างสุภาพและสร้างสรรค์ ไม่ทำให้เสียบรรยากาศทีม',
+   'ติดตามผลหลังสอนงาน ตรวจสอบว่าผู้เรียนทำได้จริงตามมาตรฐาน',
+   'ได้รับความเชื่อถือจากทีม เพื่อนร่วมงานเลือกเข้ามาถามงานหรือขอความช่วยเหลือ']]
+ ],
+ sk:[ /* Silver – ครัว */
+  ['A',15,'บุคลิกภาพ ความสะอาด และการเป็นแบบอย่าง',[
+   'แต่งกายถูกระเบียบ สะอาด ครบทุกชิ้น (ยูนิฟอร์ม หมวก/ตาข่ายคลุมผม ผ้ากันเปื้อน เล็บ รองเท้า) ทุกวันโดยไม่ต้องมีคนเตือน',
+   'ปฏิบัติตามมาตรฐานสุขอนามัยส่วนบุคคลและ Food Safety อย่างเคร่งครัด (ล้างมือ ถุงมือ การชิมอาหาร การป้องกันการปนเปื้อน)',
+   'มีกิริยา คำพูด และการทำงานร่วมกับผู้อื่นที่เหมาะสม ทั้งในครัวและกับฝ่ายบริการ',
+   'ตรงต่อเวลา มีวินัย ปฏิบัติตามกฎระเบียบร้านอย่างสม่ำเสมอ จนพนักงานคนอื่นถือเป็นแบบอย่าง']],
+  ['B',20,'ความรู้ในมาตรฐานและขั้นตอนการทำงาน',[
+   'อธิบายมาตรฐานและขั้นตอนการทำงานของครัวได้ครบทุกตำแหน่ง',
+   'อธิบายขั้นตอนเปิดครัว–ปิดครัว Checklist ประจำวัน การวัดและบันทึกอุณหภูมิได้',
+   'รู้สูตรและมาตรฐานอาหาร: ปริมาณ/น้ำหนักต่อจาน หน้าตาการจัดจาน และเวลามาตรฐานในการปรุง',
+   'รู้มาตรฐานการจัดเก็บวัตถุดิบ FIFO/FEFO การติดป้ายวันที่ อุณหภูมิจัดเก็บ และการแยกวัตถุดิบเพื่อป้องกันการปนเปื้อนข้าม',
+   'รู้มาตรฐานความสะอาด การใช้สารเคมีอย่างถูกต้อง และความปลอดภัยในการใช้เครื่องมือ/อุปกรณ์ครัว']],
+  ['C',30,'ปฏิบัติงานได้จริง — ครบทุกตำแหน่งในครัว',[
+   'เตรียมวัตถุดิบ (Prep) ได้ถูกต้องตามมาตรฐาน และประเมินปริมาณที่ต้องเตรียมได้เหมาะสม',
+   'ตำแหน่งย่าง/สเต๊ก: ควบคุมระดับความสุก เวลา และอุณหภูมิได้ถูกต้อง',
+   'ตำแหน่งพาสต้า สลัด ของทอด และของว่าง: ทำได้ถูกต้องตามสูตรและมาตรฐาน',
+   'ตำแหน่งเช็กเกอร์: ตรวจความถูกต้อง ครบถ้วน หน้าตา และอุณหภูมิของอาหารก่อนส่งออก',
+   'งานล้างจานและพื้นที่ทำความสะอาด: ใช้เครื่องล้างจานและสารเคมีได้ถูกต้องปลอดภัย',
+   'จัดลำดับออร์เดอร์และควบคุมเวลาออกอาหารได้ โดยเฉพาะช่วงลูกค้าแน่น (Peak)',
+   'สลับหมุนเวียนทำงานได้ครบทุกตำแหน่งในครัว โดยไม่ต้องมีคนคอยควบคุม']],
+  ['D',20,'การแก้ไขปัญหาเบื้องต้น',[
+   'สังเกตเห็นอาหารหรือการทำงานที่ไม่ได้มาตรฐาน และแก้ไขก่อนอาหารถึงมือลูกค้า',
+   'แก้ปัญหาหน้างานพื้นฐานได้ เช่น วัตถุดิบขาด ออร์เดอร์เร่ง ออร์เดอร์ตกหล่น อุปกรณ์ขัดข้อง',
+   'จัดการกรณีอาหารถูกตีกลับหรือลูกค้าไม่พอใจ ร่วมกับฝ่ายบริการได้อย่างเหมาะสม',
+   'รู้ขอบเขตของตนเอง ว่าเรื่องใดแก้ไขเองได้ และเรื่องใดต้องรายงานหัวหน้า/ผู้จัดการทันที']],
+  ['E',15,'การถ่ายทอดและสอนงาน',[
+   'อธิบายและสาธิตขั้นตอนการทำงานให้พนักงานใหม่เข้าใจและทำตามได้',
+   'ให้คำแนะนำหรือเตือนเพื่อนร่วมงานได้อย่างสุภาพและสร้างสรรค์ ไม่ทำให้เสียบรรยากาศทีม',
+   'ติดตามผลหลังสอนงาน ตรวจสอบว่าผู้เรียนทำได้จริงตามมาตรฐาน',
+   'ได้รับความเชื่อถือจากทีม เพื่อนร่วมงานเลือกเข้ามาถามงานหรือขอความช่วยเหลือ']]
+ ],
+ gs:[ /* Gold – บริการ */
+  ['A',15,'การเป็นแบบอย่างและวินัย',[
+   'แต่งกาย สุขอนามัย และบุคลิกภาพถูกต้องครบถ้วนทุกวัน ในระดับที่ใช้เป็นตัวอย่างอ้างอิงให้ทั้งร้านได้',
+   'ควบคุมอารมณ์และวางตัวเหมาะสมได้ทุกสถานการณ์ ทั้งกับลูกค้า เพื่อนร่วมงาน และผู้จัดการ',
+   'รักษามาตรฐานและกฎระเบียบอย่างเคร่งครัด และกล้าตักเตือนผู้อื่นเมื่อพบการไม่ปฏิบัติตาม',
+   'รับผิดชอบงานที่ได้รับมอบหมายจนจบ และรายงานผลกลับได้อย่างครบถ้วน']],
+  ['B',25,'งานบริการ — หน้างานหลัก',[
+   'อธิบายมาตรฐานงานบริการได้ครบทุกตำแหน่ง ในระดับความลึกที่นำไปสอนคนอื่นได้',
+   'ปฏิบัติงานได้ครบทุกตำแหน่งอย่างถูกต้องและสม่ำเสมอ แม้ในช่วง Peak หรือคนไม่ครบ',
+   'ตรวจสอบงานบริการของทีมเทียบกับมาตรฐาน และแก้ไขให้กลับมาถูกต้องได้',
+   'ควบคุมความสะอาดและความพร้อมของพื้นที่บริการให้ได้มาตรฐานตลอดทั้งกะ',
+   'ดูแลภาพรวมคิว ที่นั่ง และการไหลของลูกค้า ให้บริการต่อเนื่องไม่ติดขัด',
+   'จัดการลูกค้าที่ไม่พอใจหรือข้อร้องเรียนได้จนจบเรื่อง โดยรักษาภาพลักษณ์ของร้าน']],
+  ['C',15,'ความรู้และการช่วยงานครัว',[
+   'อธิบายมาตรฐาน Food Safety การเตรียม และการจัดเก็บวัตถุดิบของครัวได้',
+   'รู้ตำแหน่งงานและขั้นตอนหลักในครัว รวมถึงเวลามาตรฐานในการออกอาหารแต่ละเมนู',
+   'ตรวจพบอาหารหรือการทำงานในครัวที่ไม่เป็นไปตามมาตรฐาน และแจ้งได้ถูกจุดถูกเวลา',
+   'ช่วยงานครัวขั้นพื้นฐานได้จริงเมื่อจำเป็น โดยไม่ทำให้มาตรฐานเสีย',
+   'ประสานงานระหว่างครัวกับบริการในช่วงเร่งด่วนหรือเมื่อเกิดปัญหา ให้จบได้เร็ว']],
+  ['D',25,'การแก้ไขปัญหาเฉพาะหน้า',[
+   'ประเมินสถานการณ์ จัดลำดับความสำคัญ และตัดสินใจได้ทันเวลา',
+   'จัดการปัญหาลูกค้าระดับยากได้ตามขั้นตอนของร้าน (ร้องเรียนรุนแรง ของหาย อุบัติเหตุในร้าน)',
+   'รับมือเหตุไม่ปกติหรือเหตุฉุกเฉินได้ เช่น ไฟดับ ระบบ POS/เครื่องรับชำระล่ม ของขาด พนักงานไม่พอ',
+   'แยกได้ชัดเจนว่าเรื่องใดตัดสินใจเอง และเรื่องใดต้องรายงานผู้จัดการหรือสำนักงานทันที',
+   'สรุปเหตุการณ์ สาเหตุ และแนวทางป้องกันไม่ให้เกิดซ้ำ ส่งต่อให้ผู้จัดการได้']],
+  ['E',20,'ภาวะผู้นำ การสอนงาน และการช่วยงานผู้จัดการ',[
+   'แบ่งงานและมอบหมายงานให้ทีมในกะได้เหมาะสมกับความสามารถของคนและปริมาณงาน',
+   'นำหรือช่วยนำ Briefing ก่อนเปิดร้าน สื่อสารข้อมูลสำคัญให้ทีมเข้าใจตรงกัน',
+   'วางแผนการสอนงาน และปรับวิธีสอนให้เหมาะกับพนักงานแต่ละคนได้',
+   'ติดตามผลการสอน ประเมินผู้เรียน และให้ Feedback อย่างสร้างสรรค์',
+   'ช่วยงานหรือดูแลงานแทนผู้จัดการได้ตามที่มอบหมาย เช่น คุมกะช่วงสั้น ตรวจ Checklist เปิด–ปิดร้าน',
+   'สร้างบรรยากาศทีมที่ดี ลดความขัดแย้ง และจูงใจเพื่อนร่วมงานให้ทำงานตามมาตรฐาน']]
+ ],
+ gk:[ /* Gold – ครัว */
+  ['A',15,'การเป็นแบบอย่างและวินัย',[
+   'แต่งกาย สุขอนามัย และบุคลิกภาพถูกต้องครบถ้วนทุกวัน ในระดับที่ใช้เป็นตัวอย่างอ้างอิงให้ทั้งร้านได้',
+   'ควบคุมอารมณ์และวางตัวเหมาะสมได้ทุกสถานการณ์ ทั้งกับเพื่อนร่วมงาน ฝ่ายบริการ และผู้จัดการ',
+   'รักษามาตรฐานและกฎระเบียบอย่างเคร่งครัด และกล้าตักเตือนผู้อื่นเมื่อพบการไม่ปฏิบัติตาม',
+   'รับผิดชอบงานที่ได้รับมอบหมายจนจบ และรายงานผลกลับได้อย่างครบถ้วน']],
+  ['B',25,'งานครัว — หน้างานหลัก',[
+   'อธิบายมาตรฐานงานครัวได้ครบทุกตำแหน่ง ในระดับความลึกที่นำไปสอนคนอื่นได้',
+   'ปฏิบัติงานได้ครบทุกตำแหน่งอย่างถูกต้องและสม่ำเสมอ แม้ในช่วง Peak หรือคนไม่ครบ',
+   'ตรวจสอบงานครัวของทีมเทียบกับมาตรฐาน และแก้ไขให้กลับมาถูกต้องได้',
+   'ควบคุมคุณภาพอาหาร ความถูกต้องของออร์เดอร์ และเวลาออกอาหารได้ตลอดทั้งกะ',
+   'ควบคุม Food Safety ของครัวได้ทั้งระบบ (อุณหภูมิ การจัดเก็บ วันหมดอายุ ความสะอาด) และตรวจพบจุดเสี่ยงได้',
+   'ดูแลการเตรียมวัตถุดิบและปริมาณของใช้ให้เพียงพอต่อยอดขาย และลดของเสีย']],
+  ['C',15,'ความรู้และการช่วยงานบริการ',[
+   'อธิบายมาตรฐานและขั้นตอนการให้บริการลูกค้าได้',
+   'รู้หน้าที่และขั้นตอนของ Host การรับรายการอาหาร บาร์เครื่องดื่ม และแคชเชียร์',
+   'ตรวจพบการบริการที่ไม่เป็นไปตามมาตรฐาน และแจ้งได้ถูกจุดถูกเวลา',
+   'ช่วยงานบริการขั้นพื้นฐานได้จริงเมื่อจำเป็น โดยไม่ทำให้มาตรฐานเสีย',
+   'ประสานงานระหว่างครัวกับบริการในช่วงเร่งด่วนหรือเมื่อเกิดปัญหา ให้จบได้เร็ว']],
+  ['D',25,'การแก้ไขปัญหาเฉพาะหน้า',[
+   'ประเมินสถานการณ์ จัดลำดับความสำคัญ และตัดสินใจได้ทันเวลา',
+   'จัดการกรณีอาหารตีกลับ ข้อร้องเรียนด้านคุณภาพอาหาร หรือสิ่งแปลกปลอม ได้ตามขั้นตอนของร้าน',
+   'รับมือเหตุไม่ปกติหรือเหตุฉุกเฉินได้ เช่น อุปกรณ์ครัวเสีย ไฟ/แก๊สขัดข้อง วัตถุดิบขาด พนักงานไม่พอ',
+   'แยกได้ชัดเจนว่าเรื่องใดตัดสินใจเอง และเรื่องใดต้องรายงานผู้จัดการหรือสำนักงานทันที',
+   'สรุปเหตุการณ์ สาเหตุ และแนวทางป้องกันไม่ให้เกิดซ้ำ ส่งต่อให้ผู้จัดการได้']],
+  ['E',20,'ภาวะผู้นำ การสอนงาน และการช่วยงานผู้จัดการ',[
+   'แบ่งงานและมอบหมายงานให้ทีมในกะได้เหมาะสมกับความสามารถของคนและปริมาณงาน',
+   'นำหรือช่วยนำ Briefing ก่อนเปิดร้าน สื่อสารข้อมูลสำคัญให้ทีมเข้าใจตรงกัน',
+   'วางแผนการสอนงาน และปรับวิธีสอนให้เหมาะกับพนักงานแต่ละคนได้',
+   'ติดตามผลการสอน ประเมินผู้เรียน และให้ Feedback อย่างสร้างสรรค์',
+   'ช่วยงานหรือดูแลงานแทนผู้จัดการได้ตามที่มอบหมาย เช่น คุมกะช่วงสั้น ตรวจ Checklist เปิด–ปิดครัว',
+   'สร้างบรรยากาศทีมที่ดี ลดความขัดแย้ง และจูงใจเพื่อนร่วมงานให้ทำงานตามมาตรฐาน']]
+ ]
+};
+
+function seedSections(){
+  const map = { ss:{level:'silver',station:'service'}, sk:{level:'silver',station:'kitchen'},
+                gs:{level:'gold',  station:'service'}, gk:{level:'gold',  station:'kitchen'} };
+  const out = [];
+  Object.keys(Q).forEach(k => Q[k].forEach(([label, w, name, q]) =>
+    out.push({ sid:k+'_'+label, label, name, w, when:map[k], q })));
+  return out;
+}
+
+const SEED_FORM = {
+  key:'silver-gold', emoji:'🏅',
+  title:'แบบประเมินพนักงาน Silver / Gold',
+  description:'ประเมินมาตรฐานการทำงาน การเป็นแบบอย่าง การแก้ปัญหา และการสอนงาน · ผู้กรอกไม่เห็นคะแนน',
+  round:'รอบที่ 1 / 2569',
+  status:'open',
+  subject_required:true,
+  subject_filter:{ level:['silver','gold'] },
+  scale:SCALE_1_5,
+  sections:seedSections(),
+  closing:[
+    { key:'strengths', type:'text',   label:'จุดแข็งที่โดดเด่นของพนักงานคนนี้คืออะไร', placeholder:'เช่น ใจเย็นกับลูกค้า สอนน้องได้ดี คุมงานช่วง Peak ได้', required:false },
+    { key:'improve',   type:'text',   label:'เรื่องใดที่ควรพัฒนาเป็นลำดับแรก', placeholder:'เช่น ยังไม่กล้าตัดสินใจเวลามีปัญหาเฉพาะหน้า', required:false },
+    { key:'readiness', type:'choice', label:'ความพร้อมในการเติบโตสู่ระดับถัดไป', required:true,
+      options:['พร้อม','พร้อม แต่ต้องพัฒนาเพิ่มเติมบางเรื่อง','ยังไม่พร้อม','ยังไม่สามารถประเมินได้'] },
+    { key:'notes',     type:'text',   label:'เหตุผลหรือข้อเสนอแนะเพิ่มเติม', required:false }
+  ],
+  rules:{
+    pass:{ by:'level', map:{ silver:70, gold:80 }, default:70 },
+    knockouts:[
+      { type:'minScore', section:'A', min:2, note:'มีข้อในหมวด A (แบบอย่าง/สุขอนามัย) ได้ 1 คะแนน' },
+      { type:'minPct', section:'D', pct:70, when:{ level:'gold' }, note:'หมวด D (แก้ปัญหาเฉพาะหน้า) ต่ำกว่า 70%' }
+    ]
+  },
+  sort_order:1
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   เครื่องคิดคะแนน — ใช้ร่วมกันทุกฟอร์ม
+   ══════════════════════════════════════════════════════════════════ */
+function matchWhen(when, meta){
+  if (!when) return true;
+  return Object.keys(when).every(k => {
+    const want = when[k], got = (meta || {})[k];
+    return Array.isArray(want) ? want.includes(got) : String(want) === String(got);
+  });
+}
+function sectionsFor(form, meta){
+  return (form.sections || []).filter(s => matchWhen(s.when, meta));
+}
+
+function scoreOf(form, secs, answers, meta){
+  const out = { sections:{}, total:null, avg:null, verdict:'', note:'' };
+  let wSum = 0, wScore = 0, all = [];
+  secs.forEach(sec => {
+    const vals = sec.q.map((_, j) => answers[sec.sid + (j+1)]).filter(v => typeof v === 'number');
+    if (!vals.length){
+      out.sections[sec.sid] = { label:sec.label, name:sec.name, weight:sec.w, avg:null, pct:null, answered:0 };
+      return;
+    }
+    const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
+    const pct = avg / 5 * 100;
+    out.sections[sec.sid] = { label:sec.label, name:sec.name, weight:sec.w,
+      avg:+avg.toFixed(2), pct:+pct.toFixed(1), answered:vals.length, min:Math.min(...vals) };
+    wSum += (sec.w || 0); wScore += pct * (sec.w || 0); all = all.concat(vals);
+  });
+  if (!wSum || !all.length) return out;
+
+  out.total = +(wScore / wSum).toFixed(1);
+  out.avg   = +(all.reduce((a,b)=>a+b,0) / all.length).toFixed(2);
+
+  /* เกณฑ์ผ่าน — ปรับตามคุณสมบัติของคนที่ถูกประเมินได้ (เช่น Gold สูงกว่า Silver) */
+  const rules = form.rules || {};
+  const p = rules.pass || {};
+  let need = (typeof p === 'number') ? p
+           : (p.by ? ((p.map || {})[(meta || {})[p.by]] ?? p.default ?? 70) : (p.default ?? 70));
+
+  const fails = [];
+  if (out.total < need) fails.push(`คะแนนรวม ${out.total}% ต่ำกว่าเกณฑ์ ${need}%`);
+
+  (rules.knockouts || []).forEach(k => {
+    if (!matchWhen(k.when, meta)) return;
+    const hit = Object.values(out.sections).find(s => s.label === k.section);
+    if (!hit) return;
+    if (k.type === 'minScore' && hit.min != null && hit.min < k.min)
+      fails.push(k.note || `หมวด ${k.section} มีข้อที่ต่ำกว่า ${k.min} คะแนน`);
+    if (k.type === 'minPct' && hit.pct != null && hit.pct < k.pct)
+      fails.push(k.note || `หมวด ${k.section} ต่ำกว่า ${k.pct}%`);
+  });
+
+  out.verdict = fails.length ? 'fail' : 'pass';
+  out.note    = fails.join(' · ');
+  out.pass_mark = need;
+  return out;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   โหลดข้อมูล
+   ══════════════════════════════════════════════════════════════════ */
+async function boot(){
+  renderWho();
+  if (!ME.ok){
+    $('#view').innerHTML = `<div class="card"><div class="empty">
+      <h2>ยังไม่ได้เข้าสู่ระบบ</h2>
+      <p class="sub">หน้านี้ต้องเข้าผ่านหน้าหลักของฮับ เพื่อให้ระบบรู้ว่าใครเป็นผู้กรอก</p>
+      <button class="btn btn-primary" onclick="backToHub()">ไปหน้าเข้าสู่ระบบ</button>
+    </div></div>`;
+    return;
+  }
+  try{
+    const [f, p] = await Promise.all([
+      SB.from('of_forms').select('*').order('sort_order').order('id'),
+      SB.from('of_people').select('*').eq('active', true).order('branch').order('name')
+    ]);
+    if (f.error) throw f.error;
+    if (p.error) throw p.error;
+    forms  = f.data || [];
+    people = p.data || [];
+  }catch(e){
+    $('#view').innerHTML = '';
+    msg('โหลดข้อมูลไม่สำเร็จ — ' + esc(e.message || e) +
+        '<br>ตรวจว่ารันไฟล์ <b>supabase/online-form.sql</b> ในโปรเจกต์ FAB HUB แล้ว', 'err');
+    return;
+  }
+
+  /* ยังไม่มีฟอร์มสักชุด → ใส่ชุดตั้งต้น Silver/Gold ให้ (เฉพาะทีมสำนักงาน) */
+  if (!forms.length && ME.isAdmin){
+    const { error } = await SB.from('of_forms').insert(SEED_FORM);
+    if (!error){
+      const { data } = await SB.from('of_forms').select('*').order('sort_order');
+      forms = data || [];
+      msg('ติดตั้งแบบประเมิน Silver / Gold เป็นฟอร์มตั้งต้นให้แล้ว — แก้คำถามได้ที่แท็บ <b>จัดการฟอร์ม</b>');
+    }
+  }
+  renderNav();
+  go('list');
+}
+
+async function loadResponses(){
+  const { data, error } = await SB.from('of_responses').select('*').order('created_at', { ascending:false });
+  if (error){ msg('โหลดผลไม่สำเร็จ — ' + esc(error.message), 'err'); return; }
+  responses = data || [];
+}
+async function loadPeople(){
+  const { data, error } = await SB.from('of_people').select('*').order('branch').order('name');
+  if (error){ msg('โหลดรายชื่อไม่สำเร็จ — ' + esc(error.message), 'err'); return; }
+  people = data || [];
+}
+async function loadForms(){
+  const { data, error } = await SB.from('of_forms').select('*').order('sort_order').order('id');
+  if (error){ msg('โหลดฟอร์มไม่สำเร็จ — ' + esc(error.message), 'err'); return; }
+  forms = data || [];
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   เปลือกหน้าจอ
+   ══════════════════════════════════════════════════════════════════ */
+function renderWho(){
+  if (!ME.ok){ $('#whoTag').innerHTML = ''; return; }
+  const nm = ME.name || 'ผู้ใช้';
+  $('#whoTag').innerHTML = `<div class="who-tag">
+    <span class="who-av">${esc(nm.trim().charAt(0).toUpperCase())}</span>
+    <span><span class="who-nm">${esc(nm)}</span><br><span class="who-role">${esc(ME.title)}</span></span>
+  </div>`;
+}
+
+function renderNav(){
+  const tabs = [['list','แบบฟอร์ม']];
+  if (ME.isAdmin) tabs.push(['results','ผลตอบกลับ'], ['people','รายชื่อ'], ['forms','จัดการฟอร์ม']);
+  $('#navtabs').innerHTML = tabs.map(([k,n]) =>
+    `<button class="navtab ${tab===k?'on':''}" onclick="go('${k}')">${n}</button>`).join('');
+}
+
+window.go = async function(t){
+  if (t !== 'fill') fill = null;
+  tab = t; clearMsg(); renderNav(); window.scrollTo({top:0});
+  if (t === 'list')    return renderList();
+  if (t === 'results') { $('#view').innerHTML = '<div class="loading">กำลังโหลด…</div>'; await loadResponses(); return renderResults(); }
+  if (t === 'people')  { await loadPeople();  return renderPeople(); }
+  if (t === 'forms')   { await loadForms();   return renderForms(); }
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   หน้ารายการแบบฟอร์ม
+   ══════════════════════════════════════════════════════════════════ */
+function renderList(){
+  const list = ME.isAdmin ? forms : forms.filter(f => f.status === 'open');
+  if (!list.length){
+    $('#view').innerHTML = `<div class="card"><div class="empty">
+      ${ME.isAdmin ? 'ยังไม่มีแบบฟอร์ม — สร้างได้ที่แท็บ <b>จัดการฟอร์ม</b>'
+                   : 'ตอนนี้ยังไม่มีแบบฟอร์มที่เปิดให้กรอก'}
+    </div></div>`;
+    return;
+  }
+  $('#view').innerHTML = `
+    <div class="card">
+      <h2>แบบฟอร์มที่เปิดอยู่</h2>
+      <p class="sub">เลือกแบบฟอร์มที่ต้องการกรอก · ${esc(ME.isBranch ? 'กรอกได้เฉพาะพนักงานในสาขาของคุณ' : 'ทีมสำนักงานกรอกได้ทุกสาขา')}</p>
+      <div class="form-grid">
+        ${list.map(f => `
+          <div class="form-card ${f.status==='open'?'clickable':''}" ${f.status==='open'?`onclick="startFill(${f.id})"`:''}>
+            <div class="fc-emoji">${esc(f.emoji || '📋')}</div>
+            <h3>${esc(f.title)}</h3>
+            <p>${esc(f.description || '')}</p>
+            <div class="fc-foot">
+              <span class="pill ${f.status}">${f.status==='open'?'เปิดกรอก':f.status==='draft'?'ร่าง':'ปิดแล้ว'}</span>
+              ${f.round ? `<span>${esc(f.round)}</span>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   กรอกแบบฟอร์ม
+   ══════════════════════════════════════════════════════════════════ */
+function subjectsFor(form){
+  const fl = form.subject_filter || {};
+  return people.filter(p => {
+    if (!p.active) return false;
+    if (ME.isBranch && p.branch !== ME.branch) return false;
+    return Object.keys(fl).every(k => {
+      const want = fl[k];
+      return Array.isArray(want) ? want.includes(p[k]) : String(want) === String(p[k]);
+    });
+  });
+}
+
+window.startFill = function(formId){
+  const form = forms.find(f => f.id === formId);
+  if (!form) return;
+  fill = { form, subject:null, answers:{}, texts:{}, panel:0, panels:[], sections:[] };
+  tab = 'fill'; renderNav();
+  renderPick();
+};
+
+function renderPick(){
+  const form = fill.form;
+  if (!form.subject_required){
+    fill.subject = { id:0, name:'', branch:'' };
+    return beginQuestions();
+  }
+  const subs = subjectsFor(form);
+  const byBranch = {};
+  subs.forEach(p => (byBranch[p.branch || 'ไม่ระบุสาขา'] ||= []).push(p));
+
+  $('#view').innerHTML = `
+  <div class="card">
+    <p class="eyebrow">${esc(form.round || '')}</p>
+    <h2>${esc(form.title)}</h2>
+    <p class="sub">${esc(form.description || '')}</p>
+
+    <div class="field">
+      <label>ผู้กรอก</label>
+      <input value="${esc(ME.name)}${ME.branch ? ' — ' + esc(ME.branch) : ''}" disabled>
+      <p class="sub" style="margin:6px 0 0;font-size:13px">มาจากบัญชีที่เข้าสู่ระบบ เปลี่ยนเองไม่ได้</p>
+    </div>
+
+    <div class="field">
+      <label for="selSub">เลือกพนักงานที่ถูกประเมิน</label>
+      ${subs.length ? `<select id="selSub"><option value="">— เลือกชื่อ —</option>
+        ${Object.keys(byBranch).sort().map(b => `<optgroup label="${esc(b)}">
+          ${byBranch[b].map(p => `<option value="${p.id}">${esc(p.name)}${p.level?` — ${p.level==='gold'?'Gold':'Silver'}`:''}${p.station?` · ${p.station==='kitchen'?'ครัว':'บริการ'}`:''}</option>`).join('')}
+        </optgroup>`).join('')}
+      </select>` : `<div class="notice warn show">ยังไม่มีรายชื่อที่ตรงกับฟอร์มนี้${ME.isBranch?' ในสาขาของคุณ':''} — ${ME.isAdmin?'เพิ่มได้ที่แท็บ <b>รายชื่อ</b>':'แจ้งผู้ดูแลระบบให้เพิ่มรายชื่อก่อน'}</div>`}
+    </div>
+
+    <div class="who-row" id="subTags"></div>
+    ${scaleNote(form)}
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="go('list')">ยกเลิก</button>
+      <button class="btn btn-primary" id="btnBegin" disabled>เริ่มกรอก</button>
+    </div>
+  </div>`;
+
+  const sel = $('#selSub');
+  if (sel) sel.onchange = () => {
+    fill.subject = subs.find(p => String(p.id) === sel.value) || null;
+    const t = $('#subTags'), b = $('#btnBegin');
+    if (!fill.subject){ t.innerHTML = ''; b.disabled = true; return; }
+    const s = fill.subject;
+    t.innerHTML = `<span class="pill branch">สาขา ${esc(s.branch)}</span>
+      ${s.level ? `<span class="pill ${s.level}">${s.level==='gold'?'Gold':'Silver'}</span>` : ''}
+      ${s.station ? `<span class="pill">${s.station==='kitchen'?'ครัว':'บริการ'}</span>` : ''}`;
+    b.disabled = false;
+  };
+  $('#btnBegin').onclick = beginQuestions;
+}
+
+function scaleNote(form){
+  const sc = (form.scale || []).filter(o => o.hint);
+  if (!sc.length) return '';
+  return `<div class="scale-note"><b>เกณฑ์ให้คะแนน</b><ul>
+    ${sc.map(o => `<li><b>${esc(o.label)}</b> ${esc(o.hint)}</li>`).join('')}
+  </ul></div>`;
+}
+
+async function beginQuestions(){
+  const form = fill.form, sub = fill.subject;
+  const meta = { level:sub.level || '', station:sub.station || '' };
+  fill.meta = meta;
+
+  /* กันตอบซ้ำชั้นแรก — ถามฐานข้อมูลก่อนเสียเวลากรอก
+     (ชั้นจริงคือ unique index ตอนบันทึก อันนี้แค่บอกให้รู้ตัวเร็ว) */
+  const btn = $('#btnBegin');
+  if (btn){ btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ…'; }
+  try{
+    const { data, error } = await SB.from('of_responses').select('id')
+      .eq('form_key', form.key).eq('round', form.round || '')
+      .eq('rater_key', ME.code).eq('subject_id', sub.id || 0).limit(1);
+    if (error) throw error;
+    if (data && data.length){
+      msg(`คุณกรอกแบบฟอร์มนี้ให้ <b>${esc(sub.name || '—')}</b> ใน${esc(form.round || 'รอบนี้')}ไปแล้ว กรอกซ้ำไม่ได้` +
+          (ME.isAdmin ? '<br>ถ้าต้องการให้กรอกใหม่ ลบรายการเดิมที่แท็บ <b>ผลตอบกลับ</b>' : '<br>ถ้าต้องการแก้ไข แจ้งผู้ดูแลระบบให้ลบรายการเดิมก่อน'), 'warn');
+      if (btn){ btn.disabled = false; btn.textContent = 'เริ่มกรอก'; }
+      return;
+    }
+  }catch(e){
+    msg('ตรวจสอบการกรอกซ้ำไม่สำเร็จ — ' + esc(e.message || e) + '<br>กรุณาลองใหม่', 'err');
+    if (btn){ btn.disabled = false; btn.textContent = 'เริ่มกรอก'; }
+    return;
+  }
+
+  fill.sections = sectionsFor(form, meta);
+  if (!fill.sections.length){
+    msg('ไม่พบชุดคำถามที่ตรงกับคุณสมบัติของคนนี้ (ระดับ/หน้างาน) — ตรวจข้อมูลรายชื่อหรือเงื่อนไขหมวดคำถาม', 'err');
+    if (btn){ btn.disabled = false; btn.textContent = 'เริ่มกรอก'; }
+    return;
+  }
+  fill.panels = fill.sections.map(s => s.sid);
+  if ((form.closing || []).length) fill.panels.push('__closing');
+  fill.panel = 0;
+  fill.answers = {}; fill.texts = {};
+  renderPanel();
+}
+
+function renderPanel(){
+  const form = fill.form;
+  const key  = fill.panels[fill.panel];
+  const n = fill.panels.length;
+  const pct = Math.round(((fill.panel + 1) / n) * 100);
+
+  let body;
+  if (key === '__closing'){
+    body = `<h2>${esc(form.closing_title || 'สรุปท้ายแบบฟอร์ม')}</h2>
+      <p class="sub">ส่วนนี้ช่วยให้ผู้ดูแลเห็นภาพชัดขึ้น นอกเหนือจากคะแนน</p>
+      ${(form.closing || []).map((c, i) => closingHtml(c, i)).join('')}`;
+  } else {
+    const sec = fill.sections.find(s => s.sid === key);
+    const cols = (form.scale || []).length || 6;
+    body = `<p class="eyebrow">หมวด ${esc(sec.label)} · ${fill.panel+1} จาก ${fill.sections.length}</p>
+      <h2 class="section-head">${esc(sec.name)}</h2>
+      <div class="qlist">
+        ${sec.q.map((text, j) => qHtml(form, sec, j, text, cols)).join('')}
+      </div>`;
+  }
+
+  const s = fill.subject || {};
+  $('#view').innerHTML = `
+  <div class="card">
+    <div class="flow-head">
+      <div>
+        <p class="eyebrow">${esc(form.title)}${form.round ? ' · ' + esc(form.round) : ''}</p>
+        ${s.name ? `<div class="who-row" style="margin:6px 0 0">
+          <span class="pill branch">${esc(s.name)}</span>
+          ${s.level ? `<span class="pill ${s.level}">${s.level==='gold'?'Gold':'Silver'}</span>` : ''}
+          ${s.station ? `<span class="pill">${s.station==='kitchen'?'ครัว':'บริการ'}</span>` : ''}
+        </div>` : ''}
+      </div>
+      <div style="text-align:right;color:var(--muted);font-size:13.5px">
+        ขั้นตอน ${fill.panel+1} / ${n}
+        <div class="progress"><span style="width:${pct}%"></span></div>
+      </div>
+    </div>
+    ${body}
+    <div class="actions">
+      <button class="btn btn-secondary" id="btnPrev">${fill.panel === 0 ? 'ยกเลิก' : 'ย้อนกลับ'}</button>
+      <button class="btn btn-primary" id="btnNext">${fill.panel === n-1 ? 'ส่งแบบฟอร์ม' : 'ถัดไป'}</button>
+    </div>
+  </div>`;
+
+  /* คืนค่าที่เคยตอบไว้ เวลากดย้อนกลับมา */
+  Object.entries(fill.answers).forEach(([k,v])=>{
+    const el = document.querySelector(`input[name="${k}"][value="${v}"]`);
+    if (el) el.checked = true;
+  });
+  (form.closing || []).forEach(c => {
+    const v = fill.texts[c.key];
+    if (v == null) return;
+    if (c.type === 'choice'){
+      const el = document.querySelector(`input[name="cl_${c.key}"][value="${CSS.escape(v)}"]`);
+      if (el) el.checked = true;
+    } else {
+      const el = document.getElementById('cl_' + c.key);
+      if (el) el.value = v;
+    }
+  });
+
+  $('#view').addEventListener('change', onAnswer);
+  $('#btnPrev').onclick = () => { if (fill.panel === 0) go('list'); else { fill.panel--; renderPanel(); } };
+  $('#btnNext').onclick = onNext;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function qHtml(form, sec, j, text, cols){
+  const name = sec.sid + (j+1);
+  const scale = form.scale || SCALE_1_5;
+  return `<div class="question" data-q="${name}">
+    <p><span class="qnum">${j+1}.</span>${esc(text)}</p>
+    <div class="rating-head" style="grid-template-columns:repeat(${cols},1fr)">
+      ${scale.map(o => `<span>${esc(o.hint || '')}</span>`).join('')}
+    </div>
+    <div class="rating" style="grid-template-columns:repeat(${cols},1fr)">
+      ${scale.map(o => `<label class="${o.v==='na'?'na':''}">
+        <input type="radio" name="${name}" value="${esc(o.v)}">${esc(o.label)}</label>`).join('')}
+    </div>
+  </div>`;
+}
+
+function closingHtml(c, i){
+  if (c.type === 'choice'){
+    return `<div class="field" data-cl="${esc(c.key)}">
+      <label>${i+1}. ${esc(c.label)}${c.required?' <span style="color:var(--red)">*</span>':''}</label>
+      <div class="choice-list">
+        ${(c.options||[]).map(o => `<label><input type="radio" name="cl_${esc(c.key)}" value="${esc(o)}">${esc(o)}</label>`).join('')}
+      </div></div>`;
+  }
+  return `<div class="field" data-cl="${esc(c.key)}">
+    <label for="cl_${esc(c.key)}">${i+1}. ${esc(c.label)}${c.required?' <span style="color:var(--red)">*</span>':''}</label>
+    <textarea id="cl_${esc(c.key)}" placeholder="${esc(c.placeholder||'')}"></textarea></div>`;
+}
+
+function onAnswer(e){
+  const t = e.target;
+  if (t.type === 'radio' && t.name.startsWith('cl_')){ fill.texts[t.name.slice(3)] = t.value; return; }
+  if (t.type === 'radio'){
+    fill.answers[t.name] = (t.value === 'na') ? 'na' : Number(t.value);
+    t.closest('.question')?.classList.remove('unanswered');
+    return;
+  }
+  if (t.tagName === 'TEXTAREA' && t.id.startsWith('cl_')) fill.texts[t.id.slice(3)] = t.value;
+}
+
+function onNext(){
+  const key = fill.panels[fill.panel];
+
+  if (key === '__closing'){
+    (fill.form.closing || []).forEach(c => {
+      if (c.type !== 'choice'){
+        const el = document.getElementById('cl_' + c.key);
+        if (el) fill.texts[c.key] = el.value.trim();
+      }
+    });
+    const missing = (fill.form.closing || []).filter(c => c.required && !fill.texts[c.key]);
+    if (missing.length){
+      msg('ยังตอบไม่ครบ — ' + esc(missing[0].label), 'warn');
+      return;
+    }
+    return submit();
+  }
+
+  const sec = fill.sections.find(s => s.sid === key);
+  const missing = [];
+  sec.q.forEach((_, j) => { if (fill.answers[sec.sid + (j+1)] === undefined) missing.push(sec.sid + (j+1)); });
+  if (missing.length){
+    missing.forEach(nm => document.querySelector(`[data-q="${nm}"]`)?.classList.add('unanswered'));
+    const hasNa = (fill.form.scale || []).some(o => o.v === 'na');
+    msg(`ยังตอบไม่ครบ เหลืออีก ${missing.length} ข้อในหมวดนี้` + (hasNa ? ' (ถ้ายังไม่มีโอกาสประเมิน ให้เลือก N/A)' : ''), 'warn');
+    document.querySelector(`[data-q="${missing[0]}"]`)?.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  clearMsg();
+  if (fill.panel === fill.panels.length - 1) return submit();
+  fill.panel++; renderPanel();
+}
+
+async function submit(){
+  const form = fill.form, sub = fill.subject || {}, meta = fill.meta || {};
+  const btn = $('#btnNext'); btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+
+  const sc = scoreOf(form, fill.sections, fill.answers, meta);
+  const row = {
+    form_key:form.key, form_title:form.title, round:form.round || '',
+    rater_key:ME.code, rater_name:ME.name, rater_role:ME.role, rater_branch:ME.branch,
+    subject_id:sub.id || 0, subject_name:sub.name || '', subject_branch:sub.branch || '',
+    subject_meta:meta,
+    answers:fill.answers, sections:sc.sections,
+    total_pct:sc.total, avg_score:sc.avg, verdict:sc.verdict, verdict_note:sc.note,
+    texts:fill.texts
+  };
+
+  const { error } = await SB.from('of_responses').insert(row);
+  if (error){
+    btn.disabled = false; btn.textContent = 'ส่งแบบฟอร์ม';
+    if (error.code === '23505')
+      msg(`มีการกรอกแบบฟอร์มนี้ให้ <b>${esc(sub.name || '—')}</b> โดยคุณอยู่แล้ว ระบบไม่รับซ้ำ`, 'warn');
+    else
+      msg('บันทึกไม่สำเร็จ — ' + esc(error.message) + '<br><b>ข้อมูลยังไม่ถูกบันทึก</b> กรุณากดส่งอีกครั้ง', 'err');
+    return;
+  }
+
+  clearMsg();
+  $('#view').innerHTML = `<div class="card"><div class="success">
+    <div class="success-icon">&#10003;</div>
+    <h2>บันทึกเรียบร้อย</h2>
+    <p>ส่ง${esc(form.title)}${sub.name ? ' ของ ' + esc(sub.name) : ''} แล้ว ขอบคุณครับ/ค่ะ</p>
+    <div class="row-btns" style="justify-content:center">
+      <button class="btn btn-primary" onclick="startFill(${form.id})">กรอกคนถัดไป</button>
+      <button class="btn btn-secondary" onclick="go('list')">กลับรายการแบบฟอร์ม</button>
+    </div>
+  </div></div>`;
+  window.scrollTo({top:0});
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ผลตอบกลับ (เฉพาะทีมสำนักงาน)
+   ══════════════════════════════════════════════════════════════════ */
+let rf = { form:'', round:'', branch:'', level:'', verdict:'', q:'' };
+
+function renderResults(){
+  const formKeys = [...new Set(responses.map(r => r.form_key))];
+  const rounds   = [...new Set(responses.map(r => r.round).filter(Boolean))];
+  const branches = [...new Set(responses.map(r => r.subject_branch).filter(Boolean))].sort();
+  const levels   = [...new Set(responses.map(r => (r.subject_meta||{}).level).filter(Boolean))];
+
+  $('#view').innerHTML = `
+    <div class="card">
+      <h2>ผลตอบกลับ</h2>
+      <p class="sub">คะแนนรวมคิดแบบถ่วงน้ำหนักรายหมวด · ข้อที่ตอบ N/A ไม่ถูกนำมาคิด · ผู้กรอกไม่เห็นตัวเลขเหล่านี้</p>
+      <div class="grid3">
+        <div><label>แบบฟอร์ม</label><select id="rfForm">${opt('ทุกฟอร์ม', formKeys, rf.form)}</select></div>
+        <div><label>รอบ</label><select id="rfRound">${opt('ทุกรอบ', rounds, rf.round)}</select></div>
+        <div><label>สาขา</label><select id="rfBranch">${opt('ทุกสาขา', branches, rf.branch)}</select></div>
+        <div><label>ระดับ</label><select id="rfLevel">${opt('ทุกระดับ', levels, rf.level)}</select></div>
+        <div><label>ผล</label><select id="rfVerdict">
+          <option value="">ทั้งหมด</option>
+          <option value="pass" ${rf.verdict==='pass'?'selected':''}>ผ่านเกณฑ์</option>
+          <option value="fail" ${rf.verdict==='fail'?'selected':''}>ไม่ผ่านเกณฑ์</option>
+        </select></div>
+        <div><label>ค้นหาชื่อ</label><input id="rfQ" value="${esc(rf.q)}" placeholder="ชื่อผู้ถูกประเมิน / ผู้กรอก"></div>
+      </div>
+      <div class="row-btns" style="margin-top:14px">
+        <button class="btn btn-secondary btn-sm" onclick="go('results')">โหลดใหม่</button>
+        <button class="btn btn-secondary btn-sm" onclick="csvSummary()">ดาวน์โหลดสรุป (CSV)</button>
+        <button class="btn btn-secondary btn-sm" onclick="csvDetail()">ดาวน์โหลดรายข้อ (CSV)</button>
+      </div>
+    </div>
+    <div class="stats" id="rStats"></div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="table-wrap"><table>
+        <thead><tr><th>วันที่</th><th>ผู้ถูกประเมิน</th><th>สาขา</th><th>คุณสมบัติ</th>
+          <th>แบบฟอร์ม</th><th>ผู้กรอก</th><th>คะแนน</th><th>เฉลี่ย</th><th>ผล</th><th></th></tr></thead>
+        <tbody id="rBody"></tbody>
+      </table></div>
+      <div class="empty" id="rEmpty" style="display:none">ยังไม่มีผลตามเงื่อนไขนี้</div>
+    </div>`;
+
+  ['rfForm','rfRound','rfBranch','rfLevel','rfVerdict'].forEach(id =>
+    $('#'+id).onchange = () => { rf[id.slice(2).toLowerCase()] = $('#'+id).value; paintResults(); });
+  $('#rfQ').oninput = () => { rf.q = $('#rfQ').value; paintResults(); };
+  paintResults();
+}
+
+function opt(all, items, cur){
+  return `<option value="">${esc(all)}</option>` +
+    items.map(i => `<option value="${esc(i)}" ${cur===i?'selected':''}>${esc(i)}</option>`).join('');
+}
+
+function filteredResponses(){
+  const q = (rf.q || '').trim().toLowerCase();
+  return responses.filter(r =>
+    (!rf.form    || r.form_key === rf.form) &&
+    (!rf.round   || r.round === rf.round) &&
+    (!rf.branch  || r.subject_branch === rf.branch) &&
+    (!rf.level   || (r.subject_meta||{}).level === rf.level) &&
+    (!rf.verdict || r.verdict === rf.verdict) &&
+    (!q || (`${r.subject_name} ${r.rater_name}`).toLowerCase().includes(q))
+  );
+}
+
+function paintResults(){
+  const list = filteredResponses();
+  const pass = list.filter(r => r.verdict === 'pass').length;
+  const scored = list.filter(r => r.total_pct != null);
+  const avg = scored.length ? (scored.reduce((a,r)=>a+(+r.total_pct),0)/scored.length).toFixed(1) : '—';
+
+  $('#rStats').innerHTML = `
+    <div class="stat"><b>${list.length}</b><span>รายการทั้งหมด</span></div>
+    <div class="stat"><b style="color:var(--green)">${pass}</b><span>ผ่านเกณฑ์</span></div>
+    <div class="stat"><b style="color:var(--red)">${scored.length - pass}</b><span>ไม่ผ่านเกณฑ์</span></div>
+    <div class="stat"><b>${avg}${avg==='—'?'':'%'}</b><span>คะแนนเฉลี่ยรวม</span></div>`;
+
+  $('#rEmpty').style.display = list.length ? 'none' : '';
+  $('#rBody').innerHTML = list.map(r => {
+    const m = r.subject_meta || {};
+    return `<tr>
+      <td class="muted">${new Date(r.created_at).toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'})}</td>
+      <td><b>${esc(r.subject_name || '—')}</b></td>
+      <td>${esc(r.subject_branch)}</td>
+      <td>${m.level?`<span class="pill ${m.level}">${m.level==='gold'?'Gold':'Silver'}</span> `:''}${m.station?(m.station==='kitchen'?'ครัว':'บริการ'):''}</td>
+      <td class="muted" style="font-size:13px">${esc(r.form_title || r.form_key)}</td>
+      <td class="muted">${esc(r.rater_name)}</td>
+      <td class="score">${r.total_pct==null?'—':r.total_pct+'%'}</td>
+      <td>${r.avg_score==null?'—':r.avg_score}</td>
+      <td>${r.verdict?`<span class="pill ${r.verdict==='pass'?'pass':'fail'}">${r.verdict==='pass'?'ผ่าน':'ไม่ผ่าน'}</span>`:'<span class="muted">—</span>'}</td>
+      <td class="row-btns">
+        <button class="btn btn-secondary btn-sm" onclick="detail(${r.id})">ดู</button>
+        <button class="btn btn-danger btn-sm" onclick="delResp(${r.id})">ลบ</button>
+      </td></tr>`;
+  }).join('');
+}
+
+window.detail = function(id){
+  const r = responses.find(x => x.id === id); if (!r) return;
+  const form = forms.find(f => f.key === r.form_key);
+  const meta = r.subject_meta || {};
+  const secs = form ? sectionsFor(form, meta) : [];
+  const S = r.sections || {};
+
+  const secHtml = Object.keys(S).map(sid => {
+    const d = S[sid];
+    return `<div class="sec-row">
+      <div class="top"><span><b>${esc(d.label||'')}</b> ${esc(d.name||'')} <span class="muted">(น้ำหนัก ${d.weight}%)</span></span>
+      <b>${d.pct==null?'ไม่ได้ประเมิน':d.pct+'%'}</b></div>
+      <div class="sec-bar"><span style="width:${d.pct||0}%;${d.pct!=null&&d.pct<60?'background:#e5484d':''}"></span></div>
+    </div>`;
+  }).join('');
+
+  const qHtmlDetail = secs.length ? secs.map(sec => `<details><summary>${esc(sec.label)}. ${esc(sec.name)}</summary>
+    <table class="qtable">${sec.q.map((text, j) => {
+      const v = (r.answers||{})[sec.sid+(j+1)];
+      const cls = v === 'na' ? 'qvna' : 'qv' + v;
+      return `<tr><td>${j+1}. ${esc(text)}</td><td class="${cls}">${v==='na'?'N/A':(v ?? '—')}</td></tr>`;
+    }).join('')}</table></details>`).join('')
+    : `<p class="muted">แบบฟอร์มต้นฉบับถูกลบหรือแก้ไขไปแล้ว จึงแสดงคำถามรายข้อไม่ได้ — คะแนนรายหมวดด้านบนยังใช้อ้างอิงได้</p>`;
+
+  const textsHtml = form ? (form.closing || []).map(c =>
+    `<p style="margin:14px 0 4px"><b>${esc(c.label)}</b></p>
+     <div class="txtblock">${esc((r.texts||{})[c.key]) || '—'}</div>`).join('') : '';
+
+  $('#modalBox').innerHTML = `
+    <div class="modal-head">
+      <div>
+        <h2>${esc(r.subject_name || r.form_title)}</h2>
+        <p class="sub" style="margin:0">${esc(r.subject_branch)} ·
+          ${meta.level?`<span class="pill ${meta.level}">${meta.level==='gold'?'Gold':'Silver'}</span> `:''}
+          ${meta.station?(meta.station==='kitchen'?'ครัว':'บริการ'):''} · ${esc(r.round||'')}</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">ปิด</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>${r.total_pct ?? '—'}${r.total_pct==null?'':'%'}</b><span>คะแนนรวม</span></div>
+      <div class="stat"><b>${r.avg_score ?? '—'}</b><span>เฉลี่ย (เต็ม 5)</span></div>
+      <div class="stat"><b style="color:${r.verdict==='pass'?'var(--green)':'var(--red)'}">${r.verdict==='pass'?'ผ่าน':r.verdict==='fail'?'ไม่ผ่าน':'—'}</b>
+        <span>${esc(r.verdict_note) || (r.verdict==='pass'?'ผ่านทุกเงื่อนไข':'')}</span></div>
+    </div>
+    <h3 style="margin:18px 0 10px">คะแนนรายหมวด</h3>${secHtml || '<p class="muted">—</p>'}
+    <h3 style="margin:22px 0 10px">คำตอบรายข้อ</h3>${qHtmlDetail}
+    <h3 style="margin:22px 0 6px">ความเห็นผู้กรอก</h3>${textsHtml || '<p class="muted">—</p>'}
+    <p class="muted" style="margin-top:18px;font-size:13px">กรอกโดย ${esc(r.rater_name)} (${esc(r.rater_role)}) · ${new Date(r.created_at).toLocaleString('th-TH')}</p>`;
+  $('#modal').classList.add('show');
+};
+
+window.delResp = async function(id){
+  const r = responses.find(x => x.id === id); if (!r) return;
+  if (!confirm(`ลบผลของ ${r.subject_name || r.form_title} ที่กรอกโดย ${r.rater_name} ?\n\nลบแล้วผู้กรอกคนนี้จะกรอกใหม่ได้อีกครั้ง`)) return;
+  const { error } = await SB.from('of_responses').delete().eq('id', id);
+  if (error) return msg('ลบไม่สำเร็จ — ' + esc(error.message), 'err');
+  msg('ลบเรียบร้อย'); go('results');
+};
+
+/* ── ส่งออก CSV ─────────────────────────────────────────────────── */
+const csvCell = v => '"' + String(v==null?'':v).replace(/"/g,'""') + '"';
+function download(name, text){
+  const blob = new Blob(['﻿' + text], { type:'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+const stamp = () => new Date().toISOString().slice(0,10);
+
+window.csvSummary = function(){
+  const list = filteredResponses();
+  if (!list.length) return msg('ไม่มีข้อมูลให้ส่งออก', 'err');
+  const secLabels = [...new Set(list.flatMap(r => Object.values(r.sections||{}).map(s => s.label)))].sort();
+  const head = ['วันที่','แบบฟอร์ม','รอบ','สาขา','ผู้ถูกประเมิน','ระดับ','หน้างาน','ผู้กรอก','บทบาท',
+    'คะแนนรวม %','เฉลี่ย/5', ...secLabels.map(l => `หมวด ${l} %`), 'ผล','เหตุผลที่ไม่ผ่าน'];
+  const closingKeys = [...new Set(list.flatMap(r => Object.keys(r.texts||{})))];
+  head.push(...closingKeys);
+
+  const body = list.map(r => {
+    const m = r.subject_meta || {}, S = r.sections || {};
+    const byLabel = {}; Object.values(S).forEach(s => byLabel[s.label] = s.pct);
+    return [new Date(r.created_at).toLocaleString('th-TH'), r.form_title || r.form_key, r.round,
+      r.subject_branch, r.subject_name, m.level, m.station, r.rater_name, r.rater_role,
+      r.total_pct, r.avg_score, ...secLabels.map(l => byLabel[l]),
+      r.verdict === 'pass' ? 'ผ่าน' : r.verdict === 'fail' ? 'ไม่ผ่าน' : '', r.verdict_note,
+      ...closingKeys.map(k => (r.texts||{})[k])].map(csvCell).join(',');
+  });
+  download(`ผลแบบฟอร์ม-${stamp()}.csv`, [head.map(csvCell).join(','), ...body].join('\r\n'));
+};
+
+window.csvDetail = function(){
+  const list = filteredResponses();
+  if (!list.length) return msg('ไม่มีข้อมูลให้ส่งออก', 'err');
+  const head = ['วันที่','แบบฟอร์ม','รอบ','สาขา','ผู้ถูกประเมิน','ระดับ','หน้างาน','ผู้กรอก','หมวด','ชื่อหมวด','ข้อที่','คำถาม','คะแนน'];
+  const body = [];
+  list.forEach(r => {
+    const form = forms.find(f => f.key === r.form_key);
+    const m = r.subject_meta || {};
+    const secs = form ? sectionsFor(form, m) : [];
+    secs.forEach(sec => sec.q.forEach((text, j) => {
+      const v = (r.answers||{})[sec.sid+(j+1)];
+      body.push([new Date(r.created_at).toLocaleString('th-TH'), r.form_title || r.form_key, r.round,
+        r.subject_branch, r.subject_name, m.level, m.station, r.rater_name,
+        sec.label, sec.name, j+1, text, v === 'na' ? 'N/A' : (v ?? '')].map(csvCell).join(','));
+    }));
+  });
+  if (!body.length) return msg('ส่งออกรายข้อไม่ได้ เพราะแบบฟอร์มต้นฉบับถูกแก้/ลบไปแล้ว', 'err');
+  download(`ผลแบบฟอร์มรายข้อ-${stamp()}.csv`, [head.map(csvCell).join(','), ...body].join('\r\n'));
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   รายชื่อผู้ถูกประเมิน
+   ══════════════════════════════════════════════════════════════════ */
+let pf = { branch:'', level:'', q:'' };
+
+function renderPeople(){
+  const branches = [...new Set(people.map(p => p.branch).filter(Boolean))].sort();
+  const levels   = [...new Set(people.map(p => p.level).filter(Boolean))];
+  $('#view').innerHTML = `
+    <div class="card">
+      <h2>เพิ่มรายชื่อทีละหลายคน</h2>
+      <p class="sub">วางบรรทัดละ 1 คน คั่นด้วยจุลภาค ( , ) หรือ Tab — คัดลอกจาก Excel มาวางได้เลย<br>
+        รูปแบบ: <b>ชื่อ–นามสกุล, สาขา, ระดับ, หน้างาน</b> · ระดับและหน้างานเว้นว่างได้ถ้าฟอร์มไม่ได้ใช้</p>
+      <textarea id="impText" class="code" placeholder="สมหญิง ตั้งใจ, สามย่าน, silver, service&#10;อนันต์ พากเพียร, สามย่าน, gold, kitchen"></textarea>
+      <div class="row-btns" style="margin-top:12px">
+        <button class="btn btn-primary" onclick="importPeople()">เพิ่มรายชื่อ</button>
+        <span class="muted" style="align-self:center;font-size:13.5px">ชื่อซ้ำในสาขาเดิมจะถูกอัปเดตทับ ไม่สร้างซ้ำ</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>รายชื่อในระบบ (${people.length})</h2>
+      <p class="sub">คนที่ลาออกให้ใช้ "ปิดใช้งาน" แทนการลบ — ผลที่เคยกรอกไว้จะยังอยู่ครบ</p>
+      <div class="grid3" style="margin-bottom:14px">
+        <div><label>สาขา</label><select id="pfBranch">${opt('ทุกสาขา', branches, pf.branch)}</select></div>
+        <div><label>ระดับ</label><select id="pfLevel">${opt('ทุกระดับ', levels, pf.level)}</select></div>
+        <div><label>ค้นหา</label><input id="pfQ" value="${esc(pf.q)}" placeholder="ชื่อ"></div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ชื่อ–นามสกุล</th><th>สาขา</th><th>ระดับ</th><th>หน้างาน</th><th>สถานะ</th><th></th></tr></thead>
+        <tbody id="pBody"></tbody></table></div>
+      <div class="empty" id="pEmpty" style="display:none">ยังไม่มีรายชื่อ</div>
+    </div>`;
+  ['pfBranch','pfLevel'].forEach(id => $('#'+id).onchange = () => { pf[id.slice(2).toLowerCase()] = $('#'+id).value; paintPeople(); });
+  $('#pfQ').oninput = () => { pf.q = $('#pfQ').value; paintPeople(); };
+  paintPeople();
+}
+
+function paintPeople(){
+  const q = (pf.q||'').trim().toLowerCase();
+  const list = people.filter(p =>
+    (!pf.branch || p.branch === pf.branch) &&
+    (!pf.level  || p.level === pf.level) &&
+    (!q || p.name.toLowerCase().includes(q)));
+  $('#pEmpty').style.display = list.length ? 'none' : '';
+  $('#pBody').innerHTML = list.map(p => `<tr>
+    <td><b>${esc(p.name)}</b></td>
+    <td>${esc(p.branch) || '<span class="muted">—</span>'}</td>
+    <td>${p.level ? `<span class="pill ${p.level}">${p.level==='gold'?'Gold':'Silver'}</span>` : '<span class="muted">—</span>'}</td>
+    <td>${p.station ? (p.station==='kitchen'?'ครัว':'บริการ') : '<span class="muted">—</span>'}</td>
+    <td><span class="pill ${p.active?'pass':'off'}">${p.active?'ใช้งาน':'ปิดใช้งาน'}</span></td>
+    <td class="row-btns">
+      <button class="btn btn-secondary btn-sm" onclick="togglePerson(${p.id})">${p.active?'ปิดใช้งาน':'เปิดใช้งาน'}</button>
+      <button class="btn btn-danger btn-sm" onclick="delPerson(${p.id})">ลบ</button>
+    </td></tr>`).join('');
+}
+
+window.importPeople = async function(){
+  const lines = $('#impText').value.split('\n').map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return msg('ยังไม่ได้วางรายชื่อ', 'err');
+  const out = [], bad = [];
+  lines.forEach((line, i) => {
+    const c = line.split(/\t|,/).map(x => x.trim());
+    if (!c[0]) return bad.push(`บรรทัด ${i+1}: ไม่มีชื่อ`);
+    if (!c[1]) return bad.push(`บรรทัด ${i+1}: ไม่มีสาขา`);
+    const level = (c[2]||'').toLowerCase(), station = (c[3]||'').toLowerCase();
+    if (level && !['silver','gold'].includes(level))       return bad.push(`บรรทัด ${i+1}: ระดับต้องเป็น silver หรือ gold (ได้ "${c[2]}")`);
+    if (station && !['service','kitchen'].includes(station)) return bad.push(`บรรทัด ${i+1}: หน้างานต้องเป็น service หรือ kitchen (ได้ "${c[3]}")`);
+    out.push({ name:c[0], branch:c[1], level, station, active:true });
+  });
+  if (bad.length) return msg('ข้อมูลไม่ถูกต้อง<br>' + bad.map(esc).join('<br>'), 'err');
+
+  const { error } = await SB.from('of_people').upsert(out, { onConflict:'branch,name' });
+  if (error) return msg('เพิ่มรายชื่อไม่สำเร็จ — ' + esc(error.message), 'err');
+  msg(`เพิ่ม/อัปเดตรายชื่อ ${out.length} คนเรียบร้อย`);
+  await loadPeople(); renderPeople();
+};
+
+window.togglePerson = async function(id){
+  const p = people.find(x => x.id === id); if (!p) return;
+  const { error } = await SB.from('of_people').update({ active: !p.active }).eq('id', id);
+  if (error) return msg('แก้ไขไม่สำเร็จ — ' + esc(error.message), 'err');
+  await loadPeople(); paintPeople();
+};
+
+window.delPerson = async function(id){
+  const p = people.find(x => x.id === id); if (!p) return;
+  if (!confirm(`ลบ ${p.name} ออกจากรายชื่อ?\n\nถ้าคนนี้เคยถูกประเมินแล้ว แนะนำให้ใช้ "ปิดใช้งาน" แทน`)) return;
+  const { error } = await SB.from('of_people').delete().eq('id', id);
+  if (error) return msg('ลบไม่สำเร็จ — ' + esc(error.message), 'err');
+  msg('ลบเรียบร้อย'); await loadPeople(); paintPeople();
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   จัดการฟอร์ม — สร้าง/แก้คำถาม/เปิด-ปิด
+   ══════════════════════════════════════════════════════════════════ */
+function renderForms(){
+  if (editing) return renderEditor();
+  $('#view').innerHTML = `
+    <div class="card">
+      <h2>จัดการแบบฟอร์ม</h2>
+      <p class="sub">คำถามเก็บเป็นข้อมูลในฐานข้อมูล ไม่ได้ฝังในโค้ด — เพิ่มฟอร์มชุดใหม่ได้จากหน้านี้เลย</p>
+      <div class="row-btns">
+        <button class="btn btn-primary" onclick="newForm()">+ สร้างฟอร์มใหม่</button>
+        ${!forms.some(f => f.key === 'silver-gold')
+          ? `<button class="btn btn-secondary" onclick="installSeed()">ติดตั้งชุด Silver / Gold</button>` : ''}
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="table-wrap"><table>
+        <thead><tr><th>แบบฟอร์ม</th><th>รหัส</th><th>รอบ</th><th>หมวด/ข้อ</th><th>สถานะ</th><th></th></tr></thead>
+        <tbody>${forms.map(f => {
+          const nq = (f.sections||[]).reduce((a,s)=>a+(s.q||[]).length, 0);
+          return `<tr>
+            <td><b>${esc(f.emoji||'📋')} ${esc(f.title)}</b><br><span class="muted" style="font-size:13px">${esc(f.description||'')}</span></td>
+            <td class="muted">${esc(f.key)}</td>
+            <td>${esc(f.round||'—')}</td>
+            <td>${(f.sections||[]).length} หมวด · ${nq} ข้อ</td>
+            <td><span class="pill ${f.status}">${f.status==='open'?'เปิดกรอก':f.status==='draft'?'ร่าง':'ปิดแล้ว'}</span></td>
+            <td class="row-btns">
+              <button class="btn btn-secondary btn-sm" onclick="editForm(${f.id})">แก้ไข</button>
+              <button class="btn btn-secondary btn-sm" onclick="dupForm(${f.id})">ทำสำเนา</button>
+              <button class="btn btn-danger btn-sm" onclick="delForm(${f.id})">ลบ</button>
+            </td></tr>`;
+        }).join('')}</tbody>
+      </table></div>
+      ${forms.length ? '' : '<div class="empty">ยังไม่มีแบบฟอร์ม</div>'}
+    </div>`;
+}
+
+window.installSeed = async function(){
+  const { error } = await SB.from('of_forms').insert(SEED_FORM);
+  if (error) return msg('ติดตั้งไม่สำเร็จ — ' + esc(error.message), 'err');
+  msg('ติดตั้งชุด Silver / Gold เรียบร้อย'); go('forms');
+};
+
+window.newForm = function(){
+  editing = {
+    key:'', emoji:'📋', title:'', description:'', round:'', status:'draft',
+    subject_required:true, subject_filter:{},
+    scale:clone(SCALE_1_5), sections:[], closing:[],
+    rules:{ pass:{ default:70 }, knockouts:[] }, sort_order:(forms.length + 1)
+  };
+  renderEditor();
+};
+
+window.editForm = function(id){
+  const f = forms.find(x => x.id === id); if (!f) return;
+  editing = clone(f);
+  renderEditor();
+};
+
+window.dupForm = async function(id){
+  const f = forms.find(x => x.id === id); if (!f) return;
+  const copy = clone(f);
+  delete copy.id; delete copy.created_at; delete copy.updated_at;
+  copy.key   = f.key + '-copy-' + Date.now().toString(36).slice(-4);
+  copy.title = f.title + ' (สำเนา)';
+  copy.status = 'draft';
+  const { error } = await SB.from('of_forms').insert(copy);
+  if (error) return msg('ทำสำเนาไม่สำเร็จ — ' + esc(error.message), 'err');
+  msg('ทำสำเนาเรียบร้อย — อยู่ในสถานะ "ร่าง" แก้ให้เสร็จแล้วค่อยเปิด'); go('forms');
+};
+
+window.delForm = async function(id){
+  const f = forms.find(x => x.id === id); if (!f) return;
+  const used = responses.filter(r => r.form_key === f.key).length;
+  if (!confirm(`ลบแบบฟอร์ม "${f.title}" ?\n\n` +
+    (used ? `มีผลที่กรอกไว้แล้ว ${used} รายการ — ผลจะไม่ถูกลบ แต่จะดูคำถามรายข้อไม่ได้อีก\n\n` : '') +
+    'ยืนยันการลบ?')) return;
+  const { error } = await SB.from('of_forms').delete().eq('id', id);
+  if (error) return msg('ลบไม่สำเร็จ — ' + esc(error.message), 'err');
+  msg('ลบเรียบร้อย'); go('forms');
+};
+
+function renderEditor(){
+  const f = editing;
+  const totalByVariant = {};
+  (f.sections||[]).forEach(s => {
+    const k = JSON.stringify(s.when || {});
+    totalByVariant[k] = (totalByVariant[k] || 0) + (+s.w || 0);
+  });
+  const warn = Object.entries(totalByVariant).filter(([,v]) => Math.round(v) !== 100);
+
+  $('#view').innerHTML = `
+    <div class="card">
+      <div class="modal-head">
+        <div><h2>${f.id ? 'แก้ไขแบบฟอร์ม' : 'สร้างแบบฟอร์มใหม่'}</h2>
+          <p class="sub" style="margin:0">แก้เสร็จแล้วต้องกดบันทึก ระบบไม่บันทึกให้อัตโนมัติ</p></div>
+        <button class="btn btn-secondary btn-sm" onclick="cancelEdit()">ยกเลิก</button>
+      </div>
+
+      <div class="grid2">
+        <div class="field"><label>ชื่อแบบฟอร์ม</label><input id="eTitle" value="${esc(f.title)}"></div>
+        <div class="field"><label>รหัสฟอร์ม (ภาษาอังกฤษ ห้ามซ้ำ)</label>
+          <input id="eKey" value="${esc(f.key)}" ${f.id?'disabled':''} placeholder="เช่น silver-gold">
+          ${f.id?'<p class="sub" style="margin:6px 0 0;font-size:13px">แก้ไม่ได้ เพราะผลที่กรอกไว้อ้างอิงรหัสนี้</p>':''}
+        </div>
+      </div>
+      <div class="field"><label>คำอธิบาย</label><input id="eDesc" value="${esc(f.description||'')}"></div>
+      <div class="grid3">
+        <div class="field"><label>ไอคอน</label><input id="eEmoji" value="${esc(f.emoji||'📋')}"></div>
+        <div class="field"><label>รอบเก็บข้อมูล</label><input id="eRound" value="${esc(f.round||'')}" placeholder="รอบที่ 1 / 2569"></div>
+        <div class="field"><label>สถานะ</label><select id="eStatus">
+          <option value="draft"  ${f.status==='draft'?'selected':''}>ร่าง — ยังไม่ให้ใครกรอก</option>
+          <option value="open"   ${f.status==='open'?'selected':''}>เปิดกรอก</option>
+          <option value="closed" ${f.status==='closed'?'selected':''}>ปิดแล้ว</option>
+        </select></div>
+      </div>
+      <p class="sub" style="margin:0">เปลี่ยน "รอบ" = เปิดให้คนที่เคยกรอกแล้วกรอกได้อีกครั้ง โดยผลรอบเก่ายังอยู่ครบ</p>
+    </div>
+
+    <div class="card">
+      <h2>หมวดและคำถาม</h2>
+      <p class="sub">น้ำหนักรวมของแต่ละเส้นทางควรได้ 100%
+        ${warn.length ? `<span style="color:var(--red)">— ตอนนี้มีเส้นทางที่รวมได้ ${warn.map(([k,v])=>Math.round(v)+'%').join(', ')}</span>` : '<span style="color:var(--green)">— ครบ 100% ทุกเส้นทาง</span>'}</p>
+      <div id="secList">${(f.sections||[]).map((s,i)=>secEditHtml(s,i)).join('') || '<div class="empty">ยังไม่มีหมวดคำถาม</div>'}</div>
+      <button class="btn btn-secondary" onclick="addSection()">+ เพิ่มหมวด</button>
+    </div>
+
+    <div class="card">
+      <h2>คำถามท้ายฟอร์ม</h2>
+      <p class="sub">คำถามปลายเปิดหรือตัวเลือก ที่ไม่คิดคะแนน</p>
+      <div id="clList">${(f.closing||[]).map((c,i)=>closingEditHtml(c,i)).join('') || '<p class="muted">ยังไม่มี</p>'}</div>
+      <div class="row-btns" style="margin-top:10px">
+        <button class="btn btn-secondary btn-sm" onclick="addClosing('text')">+ คำถามปลายเปิด</button>
+        <button class="btn btn-secondary btn-sm" onclick="addClosing('choice')">+ คำถามตัวเลือก</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>เกณฑ์คะแนนและกติกา</h2>
+      <p class="sub">แก้เป็น JSON — ดูรูปแบบได้ท้ายไฟล์ <b>supabase/online-form.sql</b></p>
+      <div class="field"><label>ตัวเลือกคะแนน (scale)</label>
+        <textarea id="eScale" class="code">${esc(JSON.stringify(f.scale||[], null, 1))}</textarea></div>
+      <div class="field"><label>เกณฑ์ผ่านและ knockout (rules)</label>
+        <textarea id="eRules" class="code">${esc(JSON.stringify(f.rules||{}, null, 1))}</textarea></div>
+      <div class="field"><label>เงื่อนไขคัดรายชื่อผู้ถูกประเมิน (subject_filter)</label>
+        <textarea id="eFilter" class="code">${esc(JSON.stringify(f.subject_filter||{}, null, 1))}</textarea>
+        <p class="sub" style="margin:6px 0 0;font-size:13px">เช่น <code>{"level":["silver","gold"]}</code> · ใส่ <code>{}</code> = ใช้ได้ทุกคนในรายชื่อ</p></div>
+      <div class="field"><label style="display:flex;gap:9px;align-items:center;font-weight:400">
+        <input type="checkbox" id="eSubReq" ${f.subject_required?'checked':''} style="width:18px;height:18px;accent-color:var(--orange)">
+        ฟอร์มนี้ต้องเลือกคนที่ถูกประเมิน (ถ้าไม่ติ๊ก = แบบสำรวจทั่วไป 1 คนตอบได้ 1 ครั้ง)</label></div>
+    </div>
+
+    <div class="card">
+      <div class="row-btns">
+        <button class="btn btn-primary" onclick="saveForm()">บันทึกแบบฟอร์ม</button>
+        <button class="btn btn-secondary" onclick="cancelEdit()">ยกเลิก</button>
+      </div>
+    </div>`;
+}
+
+function secEditHtml(s, i){
+  return `<div class="sec-edit" data-sec="${i}">
+    <div class="sec-top">
+      <div><label>ตัวอักษร</label><input value="${esc(s.label||'')}" oninput="setSec(${i},'label',this.value)"></div>
+      <div><label>ชื่อหมวด</label><input value="${esc(s.name||'')}" oninput="setSec(${i},'name',this.value)"></div>
+      <div><label>น้ำหนัก %</label><input type="number" min="0" max="100" value="${s.w||0}" oninput="setSec(${i},'w',+this.value)"></div>
+      <div><button class="btn btn-danger btn-sm" onclick="delSection(${i})">ลบหมวด</button></div>
+    </div>
+    <div class="field" style="margin-bottom:11px">
+      <label>ใช้กับใคร (เว้นว่าง = ทุกคน)</label>
+      <input value="${esc(JSON.stringify(s.when||{}))}" oninput="setSecWhen(${i},this.value)"
+             placeholder='{"level":"silver","station":"service"}'>
+    </div>
+    ${(s.q||[]).map((t,j)=>`<div class="q-edit">
+      <span class="qi">${j+1}.</span>
+      <textarea oninput="setQ(${i},${j},this.value)">${esc(t)}</textarea>
+      <button class="btn btn-danger btn-sm" onclick="delQ(${i},${j})">ลบ</button>
+    </div>`).join('')}
+    <button class="btn btn-secondary btn-sm" onclick="addQ(${i})">+ เพิ่มข้อ</button>
+  </div>`;
+}
+
+function closingEditHtml(c, i){
+  return `<div class="sec-edit">
+    <div class="sec-top">
+      <div><label>รหัส</label><input value="${esc(c.key||'')}" oninput="setCl(${i},'key',this.value)"></div>
+      <div><label>คำถาม</label><input value="${esc(c.label||'')}" oninput="setCl(${i},'label',this.value)"></div>
+      <div><label>บังคับตอบ</label><select onchange="setCl(${i},'required',this.value==='1')">
+        <option value="0" ${c.required?'':'selected'}>ไม่บังคับ</option>
+        <option value="1" ${c.required?'selected':''}>บังคับ</option></select></div>
+      <div><button class="btn btn-danger btn-sm" onclick="delClosing(${i})">ลบ</button></div>
+    </div>
+    ${c.type === 'choice'
+      ? `<div class="field" style="margin:0"><label>ตัวเลือก (บรรทัดละ 1 ข้อ)</label>
+         <textarea class="code" oninput="setClOpts(${i},this.value)">${esc((c.options||[]).join('\n'))}</textarea></div>`
+      : `<p class="muted" style="margin:0;font-size:13.5px">คำถามปลายเปิด — ผู้กรอกพิมพ์ตอบเอง</p>`}
+  </div>`;
+}
+
+/* ตัวช่วยแก้ไขในหน่วยความจำ — เรนเดอร์ใหม่เฉพาะตอนที่โครงเปลี่ยน
+   ไม่งั้นช่องที่กำลังพิมพ์จะเสียโฟกัสทุกตัวอักษร */
+window.setSec = (i,k,v) => { editing.sections[i][k] = v; };
+window.setSecWhen = (i,v) => { try{ editing.sections[i].when = v.trim() ? JSON.parse(v) : {}; }catch(e){} };
+window.setQ   = (i,j,v) => { editing.sections[i].q[j] = v; };
+window.setCl  = (i,k,v) => { editing.closing[i][k] = v; };
+window.setClOpts = (i,v) => { editing.closing[i].options = v.split('\n').map(x=>x.trim()).filter(Boolean); };
+window.addQ = i => { editing.sections[i].q.push(''); renderEditor(); };
+window.delQ = (i,j) => { editing.sections[i].q.splice(j,1); renderEditor(); };
+window.delSection = i => { if (confirm('ลบหมวดนี้พร้อมคำถามทั้งหมด?')) { editing.sections.splice(i,1); renderEditor(); } };
+window.addSection = () => {
+  const label = String.fromCharCode(65 + (editing.sections.length % 26));
+  editing.sections.push({ sid:'s'+Date.now().toString(36), label, name:'', w:0, when:{}, q:[''] });
+  renderEditor();
+};
+window.addClosing = type => {
+  editing.closing.push({ key:'q'+(editing.closing.length+1), type, label:'', required:false, options:type==='choice'?['']:undefined });
+  renderEditor();
+};
+window.delClosing = i => { editing.closing.splice(i,1); renderEditor(); };
+window.cancelEdit = () => { editing = null; go('forms'); };
+
+window.saveForm = async function(){
+  const f = editing;
+  f.title = $('#eTitle').value.trim();
+  if (!f.id) f.key = $('#eKey').value.trim();
+  f.description = $('#eDesc').value.trim();
+  f.emoji  = $('#eEmoji').value.trim() || '📋';
+  f.round  = $('#eRound').value.trim();
+  f.status = $('#eStatus').value;
+  f.subject_required = $('#eSubReq').checked;
+
+  if (!f.title) return msg('ยังไม่ได้ตั้งชื่อแบบฟอร์ม', 'err');
+  if (!f.key || !/^[a-z0-9-]+$/.test(f.key))
+    return msg('รหัสฟอร์มต้องเป็นภาษาอังกฤษพิมพ์เล็ก ตัวเลข หรือขีดกลางเท่านั้น', 'err');
+
+  try{
+    f.scale = JSON.parse($('#eScale').value || '[]');
+    f.rules = JSON.parse($('#eRules').value || '{}');
+    f.subject_filter = JSON.parse($('#eFilter').value || '{}');
+  }catch(e){ return msg('JSON ไม่ถูกต้อง — ' + esc(e.message), 'err'); }
+
+  /* รหัสหมวดต้องไม่ซ้ำ ไม่งั้นคำตอบจะทับกันเงียบ ๆ */
+  const sids = f.sections.map(s => s.sid);
+  if (new Set(sids).size !== sids.length) return msg('รหัสหมวด (sid) ซ้ำกัน — ลบหมวดที่ซ้ำแล้วเพิ่มใหม่', 'err');
+  const emptyQ = f.sections.find(s => !(s.q||[]).filter(x => x.trim()).length);
+  if (emptyQ) return msg(`หมวด "${esc(emptyQ.label)}" ยังไม่มีคำถาม`, 'err');
+  f.sections.forEach(s => { s.q = s.q.map(x => x.trim()).filter(Boolean); });
+
+  const row = clone(f);
+  delete row.created_at; delete row.updated_at;
+  row.updated_at = new Date().toISOString();
+
+  const q = row.id ? SB.from('of_forms').update(row).eq('id', row.id)
+                   : SB.from('of_forms').insert(row);
+  const { error } = await q;
+  if (error){
+    if (error.code === '23505') return msg('รหัสฟอร์มนี้มีอยู่แล้ว ใช้รหัสอื่น', 'err');
+    return msg('บันทึกไม่สำเร็จ — ' + esc(error.message), 'err');
+  }
+  editing = null;
+  msg('บันทึกแบบฟอร์มเรียบร้อย');
+  go('forms');
+};
+
+boot();
+</script>
+</body>
+</html>

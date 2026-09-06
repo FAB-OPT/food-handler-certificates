@@ -1493,3 +1493,171 @@ function deleteExamRequest(id) {
     return { ok: false, error: 'not found' };
   } finally { lock.releaseLock(); }
 }
+
+/* =======================================================================
+   สำรองข้อมูลระบบเช็คลิสต์ (Checklist auto-backup)
+
+   ทำไมต้องมี: backupFqaDaily() ข้างบนสำรองเฉพาะระบบ Visit สาขา ซึ่งเก็บในชีตนี้
+   ส่วนผลตรวจเปิด-ปิดร้านของทุกสาขาอยู่ใน Firestore คนละที่ และไม่เคยมีการสำรองเลย
+   วันที่เขียนโค้ดนี้มี 6,410 ใบ ย้อนหลังตั้งแต่ 26 มิ.ย. 2569 ถ้าหายคือหายถาวร
+
+   . backupChecklistDay(date)  = สำรองผลตรวจของวันเดียว เป็นไฟล์ ck-daily-<วันที่>.json
+   . backupChecklistSmall()    = สำรองคอลเลกชันเล็กทั้งก้อน (เจ๊แดง สรุปรายเดือน audits)
+   . backupChecklistDaily()    = ตัวที่ตัวตั้งเวลาเรียกทุกคืน (เมื่อวาน + วันนี้ + ก้อนเล็ก)
+   . backupChecklistBackfill() = ไล่สำรองย้อนหลัง รันซ้ำได้จนกว่าจะครบ
+   . setupChecklistBackup()    = ตั้งตัวตั้งเวลา รันครั้งเดียวจาก editor
+
+   ทำไมแบ่งเป็นวัน: ทั้งหมดรวมกันราว 83 MB ดึงรวดเดียวไม่ทัน 6 นาทีที่ Apps Script ให้
+   วันละราว 1.5 MB (117 ใบ) ซึ่งจบใน 2-3 วินาที และแบ่งแล้วยังกู้เฉพาะวันที่ต้องการได้
+   ไม่ต้องยกไฟล์ทั้งก้อนมาเปิด
+
+   ทำไมแปลงเป็น JSON ธรรมดา: รูปแบบดิบของ Firestore ห่อค่าทุกตัวด้วยชนิดข้อมูล
+   ซึ่งใหญ่กว่ากันสี่เท่า วัดจากของจริงแล้ว 2.6 MB เหลือ 656 KB
+   และรูปแบบที่ได้ตรงกับที่แอปใช้ เอากลับเข้าระบบได้เลย
+   ======================================================================= */
+var CKB_PROJECT = 'checklist-a89e2';
+/* คีย์นี้เป็นคีย์ฝั่งหน้าเว็บ อยู่ใน index.html ที่เปิดสาธารณะอยู่แล้ว ไม่ใช่ความลับ */
+var CKB_KEY = 'AIzaSyB489GnLRLLL00a-5JhsGBn5y7W8STIGpI';
+var CKB_BASE = 'https://firestore.googleapis.com/v1/projects/' + CKB_PROJECT + '/databases/(default)/documents';
+var CKB_FOLDER = 'Checklist Backups';
+var CKB_TZ = 'Asia/Bangkok';
+/* เก็บย้อนหลังกี่วัน - ตั้งยาวกว่าที่ Firestore เก็บ (90 วัน) มาก
+   เพราะจุดประสงค์คือกู้คืนตอนข้อมูลหาย ไม่ใช่แค่เก็บของใช้งานประจำ */
+var CKB_KEEP_DAYS = 400;
+/* เผื่อเวลาจาก 6 นาทีที่ Apps Script ให้ - หมดโควตาแล้วให้หยุดอย่างเรียบร้อยแล้วบอกให้รันซ้ำ
+   ดีกว่าถูกตัดกลางคันจนได้ไฟล์ที่เขียนไม่จบ */
+var CKB_BUDGET_MS = 4.5 * 60 * 1000;
+
+/* ---------- แปลงค่าจากรูปแบบของ Firestore เป็น JSON ธรรมดา ---------- */
+function _ckbDecode(v) {
+  if (v === null || v === undefined) return null;
+  if ('stringValue'    in v) return v.stringValue;
+  if ('integerValue'   in v) return Number(v.integerValue);
+  if ('doubleValue'    in v) return v.doubleValue;
+  if ('booleanValue'   in v) return v.booleanValue;
+  if ('timestampValue' in v) return v.timestampValue;
+  if ('nullValue'      in v) return null;
+  if ('arrayValue'     in v) return ((v.arrayValue && v.arrayValue.values) || []).map(_ckbDecode);
+  if ('mapValue'       in v) return _ckbFields((v.mapValue && v.mapValue.fields) || {});
+  return null;
+}
+function _ckbFields(f) { var o = {}; for (var k in f) o[k] = _ckbDecode(f[k]); return o; }
+function _ckbDocId(name) { var p = String(name || '').split('/'); return p[p.length - 1]; }
+
+/* ---------- ดึงข้อมูล ---------- */
+function _ckbQueryByDate(collection, dateStr) {
+  var body = { structuredQuery: { from: [{ collectionId: collection }],
+    where: { fieldFilter: { field: { fieldPath: 'date' }, op: 'EQUAL',
+             value: { stringValue: dateStr } } } } };
+  var res = UrlFetchApp.fetch(CKB_BASE + ':runQuery?key=' + CKB_KEY, {
+    method: 'post', contentType: 'application/json',
+    payload: JSON.stringify(body), muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) throw new Error('Firestore ตอบ ' + res.getResponseCode() + ': ' + res.getContentText().slice(0, 200));
+  var arr = JSON.parse(res.getContentText());
+  if (!(arr instanceof Array)) throw new Error('รูปแบบผลลัพธ์ไม่ถูกต้อง');
+  var out = [];
+  arr.forEach(function (x) {
+    if (!x.document) return;                       /* แถวที่มีแต่ readTime = ไม่พบข้อมูล */
+    var o = _ckbFields(x.document.fields || {});
+    if (!o.id) o.id = _ckbDocId(x.document.name);
+    out.push(o);
+  });
+  return out;
+}
+function _ckbListAll(collection) {
+  var out = [], token = '';
+  for (var i = 0; i < 200; i++) {
+    var u = CKB_BASE + '/' + collection + '?pageSize=300&key=' + CKB_KEY +
+            (token ? '&pageToken=' + encodeURIComponent(token) : '');
+    var res = UrlFetchApp.fetch(u, { muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) throw new Error(collection + ' ตอบ ' + res.getResponseCode());
+    var j = JSON.parse(res.getContentText());
+    (j.documents || []).forEach(function (d) {
+      var o = _ckbFields(d.fields || {});
+      if (!o.id) o.id = _ckbDocId(d.name);
+      out.push(o);
+    });
+    token = j.nextPageToken || '';
+    if (!token) break;
+  }
+  return out;
+}
+
+/* ---------- เขียนไฟล์ ---------- */
+function _ckbFolder() {
+  var it = DriveApp.getFoldersByName(CKB_FOLDER);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(CKB_FOLDER);
+}
+function _ckbHasFile(name) { return _ckbFolder().getFilesByName(name).hasNext(); }
+function _ckbWrite(name, payload) {
+  var folder = _ckbFolder();
+  var ex = folder.getFilesByName(name);
+  while (ex.hasNext()) ex.next().setTrashed(true);   /* เขียนทับของวันเดียวกัน */
+  folder.createFile(name, JSON.stringify(payload), 'application/json');
+}
+
+/* ---------- งานหลัก ---------- */
+function backupChecklistDay(dateStr) {
+  var recs = _ckbQueryByDate('dailyChecklists', dateStr);
+  /* วันที่ไม่มีใบเลย (ร้านปิด/ยังไม่ถึง) ไม่ต้องสร้างไฟล์เปล่า
+     ไม่งั้นตัวไล่ย้อนหลังจะมองว่าทำแล้ว ทั้งที่ยังไม่มีอะไรให้ทำ */
+  if (!recs.length) return { ok: true, date: dateStr, count: 0, skipped: true };
+  _ckbWrite('ck-daily-' + dateStr + '.json',
+    { exportedAt: new Date().toISOString(), collection: 'dailyChecklists',
+      date: dateStr, count: recs.length, records: recs });
+  return { ok: true, date: dateStr, count: recs.length };
+}
+function backupChecklistSmall() {
+  var stamp = Utilities.formatDate(new Date(), CKB_TZ, 'yyyy-MM-dd');
+  var out = { exportedAt: new Date().toISOString() };
+  ['jaedaengAudits', 'dailySummary', 'audits'].forEach(function (c) {
+    try { out[c] = _ckbListAll(c); }
+    catch (e) { out[c] = { error: String(e && e.message || e) }; }
+  });
+  _ckbWrite('ck-small-' + stamp + '.json', out);
+  return { ok: true, jaedaeng: (out.jaedaengAudits || []).length,
+           summary: (out.dailySummary || []).length, audits: (out.audits || []).length };
+}
+/* ตัวที่ตัวตั้งเวลาเรียกทุกคืน - ทำเมื่อวานด้วย เพราะรอบปิดร้านบางสาขาส่งหลังเที่ยงคืน
+   ถ้าทำแต่วันนี้จะตกหล่น */
+function backupChecklistDaily() {
+  var now = new Date();
+  var y = new Date(now.getTime() - 86400000);
+  var f = function (d) { return Utilities.formatDate(d, CKB_TZ, 'yyyy-MM-dd'); };
+  var r1 = backupChecklistDay(f(y));
+  var r2 = backupChecklistDay(f(now));
+  var r3 = backupChecklistSmall();
+  _ckbPurgeOld();
+  return { yesterday: r1, today: r2, small: r3 };
+}
+/* ไล่สำรองย้อนหลัง - ข้ามวันที่มีไฟล์แล้ว หยุดเมื่อใกล้หมดเวลาหรือเจอวันว่างติดกันหลายวัน
+   รันซ้ำได้เรื่อย ๆ จนกว่าจะขึ้นว่าครบ */
+function backupChecklistBackfill() {
+  var t0 = Date.now(), done = 0, empty = 0, cur = new Date();
+  for (var i = 0; i < CKB_KEEP_DAYS; i++) {
+    if (Date.now() - t0 > CKB_BUDGET_MS) {
+      return { ok: true, done: done, stopped: 'หมดเวลารอบนี้ - รัน backupChecklistBackfill() อีกครั้งเพื่อทำต่อ' };
+    }
+    var d = Utilities.formatDate(cur, CKB_TZ, 'yyyy-MM-dd');
+    cur = new Date(cur.getTime() - 86400000);
+    if (_ckbHasFile('ck-daily-' + d + '.json')) { empty = 0; continue; }
+    var r = backupChecklistDay(d);
+    if (r.count) { done++; empty = 0; }
+    else { empty++; if (empty >= 14) return { ok: true, done: done, stopped: 'ไม่พบข้อมูลติดกัน 14 วัน - น่าจะครบแล้ว' }; }
+  }
+  return { ok: true, done: done, stopped: 'ครบ ' + CKB_KEEP_DAYS + ' วันแล้ว' };
+}
+function _ckbPurgeOld() {
+  var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - CKB_KEEP_DAYS);
+  var files = _ckbFolder().getFiles(), n = 0;
+  while (files.hasNext()) { var f = files.next(); if (f.getDateCreated() < cutoff) { f.setTrashed(true); n++; } }
+  return n;
+}
+/* ตั้งตัวตั้งเวลา - ตี 3 คนละชั่วโมงกับ backupFqaDaily ที่ตี 2 จะได้ไม่ชนกัน */
+function setupChecklistBackup() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'backupChecklistDaily') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('backupChecklistDaily').timeBased().atHour(3).everyDays(1).create();
+  return { ok: true, msg: 'ตั้งให้สำรองข้อมูลเช็คลิสต์ทุกวันตอนตี 3 แล้ว' };
+}
