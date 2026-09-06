@@ -415,6 +415,10 @@ body {
 /* บั๊กเดิมที่แก้ไปด้วย: โหมด Team Management ใช้รหัส 6 หลัก แต่ช่องถูกตรึงกว้าง 50px
    หกช่องรวมกันจึงกว้างกว่าการ์ดแล้วอัดชนขอบ · ให้ช่องหดได้ ขนาดตอน 4 หลักเท่าเดิม */
 .pin-box { flex: 0 1 50px; min-width: 0; }
+@media (max-width: 480px) {
+  .pin-boxes { gap: 7px; }
+  .pin-box { flex: 0 1 42px; height: 52px; font-size: 19px; border-radius: 11px; }
+}
 
 @keyframes shellFade {
   to { opacity: 0; pointer-events: none; }
@@ -979,7 +983,13 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
   body.hub-clean .hub-bar .topbar-actions {
     width: auto; margin-left: auto; padding-top: 0; border-top: 0; flex: none; gap: 8px;
   }
-  body.hub-clean .hub-user-nm { max-width: 92px; font-size: 12px; }
+  body.hub-clean .hub-user-nm { max-width: none; font-size: 12.5px; }
+  body.hub-clean .hub-user,
+  body.hub-clean .hub-user-txt { min-width: 0; }
+  body.hub-clean .hub-bar .topbar-actions { min-width: 0; flex: 0 1 auto; }
+  /* โลโก้ยอมหดก่อนเสมอ ปุ่มออกจากระบบห้ามหลุดจอเด็ดขาด */
+  body.hub-clean .hub-bar .logo { flex: 1 1 40px; min-width: 0; }
+  body.hub-clean .hub-icon-btn { flex: none; }
   body.hub-clean .hub-user { gap: 7px; padding: 0 2px 0 0; }
   body.hub-clean .hub-icon-btn { width: 34px; height: 34px; }
 }
@@ -987,7 +997,7 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
 @media (max-width: 430px) {
   /* จอแคบมาก: เก็บชื่อไว้ (ย่อด้วย …) ตัดแค่ตำแหน่งออก */
   body.hub-clean .hub-user-role { display: none; }
-  body.hub-clean .hub-user-nm { max-width: 76px; }
+  body.hub-clean .hub-user-nm { max-width: none; }
   body.hub-clean .hub-user { padding: 0; }
   body.hub-clean .hub-bar .logo-sub { display: none; }
 }
@@ -997,7 +1007,15 @@ body.hub-clean .hub-icon-btn { width: 36px; height: 36px; }
    ป็อปอัพยังเป็นหน้าตาชุดเก่า (มุมเหลี่ยม แท็บขีดล่าง ปุ่มสี่เหลี่ยม)
    เปิดจากหน้าที่จัดใหม่แล้วจึงดูเหมือนคนละแอป
    ปรับให้ใช้ภาษาเดียวกัน: มุมมนขึ้น หัวข้อใหญ่ขึ้น สีแบรนด์อยู่กับปุ่มที่ต้องกด */
-body.hub-clean .adm-modal-box { border-radius: 18px; overflow: hidden; }
+body.hub-clean .adm-modal-box {
+  border-radius: 18px; overflow: hidden;
+  display: flex; flex-direction: column; max-height: 88vh;
+}
+body.hub-clean .adm-modal-header,
+body.hub-clean .adm-modal-footer { flex: none; }
+body.hub-clean .adm-modal-body {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
 body.hub-clean .adm-modal-header {
   padding: 16px 20px; border-bottom: 1px solid #eceef1; gap: 12px;
 }
