@@ -4593,6 +4593,7 @@ const Plan = {
 
       <div class="card">
         <div class="hd"><h3>ตารางแผน</h3><div class="sp"></div>
+          <button class="btn sm" style="margin-right:9px" onclick="Plan.excel()">⬇ Excel</button>
           <span class="seg mini">
             <button class="${this.view==='cal'?'on':''}" onclick="Plan.setView('cal')">ปฏิทิน</button>
             <button class="${this.view==='list'?'on':''}" onclick="Plan.setView('list')">รายการ</button>
@@ -4688,6 +4689,21 @@ const Plan = {
         : `<div class="empty"><div class="big">🗓</div><h4>ยังไม่มีแผนตามตัวกรอง</h4><p>เพิ่มแผนจากช่องด้านบน</p></div>` }</div>`;
   },
   setFilter(k,v){ this[k]=v; this.render(); },
+
+  /* แผนที่ตรงกับตัวกรองในหน้า "รายการ" — ใช้ร่วมกันระหว่างตารางกับปุ่มส่งออก
+     ผูกกับตัวกรองที่เห็นอยู่ ไม่ใช่ทั้งหมด เพราะคนกดส่งออกตอนกรองเดือนไว้
+     แล้วได้ไฟล์ทุกเดือนมาแทน คือสิ่งที่ไม่ได้ขอ */
+  filtered(){
+    let l = plans().slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    if(this.fMonth) l = l.filter(x=>(x.date||'').slice(0,7)===this.fMonth);
+    if(this.fType)  l = l.filter(x=>planType(x.ptype)===this.fType);
+    return l;
+  },
+  excel(){
+    const l = this.filtered();
+    if(!l.length) return App.toast('ไม่มีแผนตามตัวกรอง');
+    IO.exportPlanXlsx(l);
+  },
 
   del(id){ if(!canEdit()) return App.toast('เฉพาะแอดมิน / Support Team เท่านั้นที่ลบได้');
     App.confirm({icon:'🗑', title:'ลบแผนการตรวจ', msg:'ต้องการลบแผนการตรวจนี้ใช่หรือไม่?\nการลบจะมีผลกับทุกอุปกรณ์', okText:'ลบแผน', onOk:()=>{ DB.remove(id); Cloud.enqueue('delete', id); this.render(); if(App.view==='dash') Dash.render(); App.toast('ลบแผนแล้ว'); }}); },
@@ -5205,6 +5221,69 @@ const IO = {
       add('Complaint',d.comp); add('Visit',d.visit); add('ข้อมูลสาขา',d.master);
       XLSX.writeFile(wb,`FQA_รายงานการตรวจสาขา_${this.bTag()}_${this.stamp()}.xlsx`);
       App.toast('ส่งออกไฟล์ Excel แล้ว');
+    }).catch(e=>App.toast(e.message));
+  },
+  /* ส่งออกแผนการตรวจสาขา
+
+     แยกจาก exportXlsx เพราะคนละเรื่องกัน อันนั้นคือผลตรวจที่เกิดขึ้นแล้ว
+     อันนี้คือสิ่งที่นัดไว้ว่าจะไป และคำถามที่คนเปิดไฟล์นี้อยากรู้คือ
+     "นัดไว้แล้วไปครบไหม" จึงคิดสถานะให้ด้วย ไม่ใช่ยกตารางบนจอออกมาเฉย ๆ
+
+     สถานะใช้ planState() ตัวเดียวกับที่หน้าจอใช้ — ถ้าวันหน้าเกณฑ์เปลี่ยน
+     (ตอนนี้คือมีใบตรวจสาขานั้นชนิดนั้นภายใน 30 วันนับจากวันนัด)
+     ไฟล์กับหน้าจอจะเปลี่ยนตามกันเอง ไม่หลุดจากกัน */
+  planRows(list){
+    const dowTH=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+    const dow=iso=>{ try{ return dowTH[new Date(iso+'T00:00:00').getDay()]; }catch(e){ return ''; } };
+    return list.map((p,i)=>{
+      const st=planState(p), k=planType(p.ptype);
+      return {
+        'ลำดับ': i+1,
+        'วันที่นัดตรวจ': p.date || '',
+        'วัน': dow(p.date),
+        'เดือน': mLabel((p.date||'').slice(0,7)),
+        'ประเภทการตรวจ': PLAN_TYPE[k] || k,
+        'สาขา': p.branch || '',
+        'ผู้จัดการเขต': p.bzm || '',
+        'ผู้ตรวจ': p.trainer || '',
+        'สถานะ': (PLAN_BADGE[st.s] || ['—'])[0],
+        'ตรวจจริงเมื่อ': st.on || '',
+        'เลขที่ใบตรวจ': st.id || '',
+        'บันทึกแผนเมื่อ': (p.createdAt||'').slice(0,19).replace('T',' ')
+      };
+    });
+  },
+  /* สรุปรายเดือน — แผ่นนี้คือสิ่งที่เอาไปคุยในที่ประชุมจริง ๆ
+     ตารางรายบรรทัดยาวเกินกว่าจะดูรวดเดียวว่าเดือนไหนหลุดเป้า */
+  planSummary(rows){
+    const by={};
+    rows.forEach(r=>{
+      const m=r['เดือน']||'—';
+      const o=by[m]=by[m]||{n:0,done:0,over:0,up:0};
+      o.n++;
+      if(r['สถานะ']==='ตรวจแล้ว') o.done++;
+      else if(r['สถานะ']==='เกินกำหนด') o.over++;
+      else o.up++;
+    });
+    return Object.keys(by).map(m=>({
+      'เดือน': m, 'แผนทั้งหมด': by[m].n, 'ตรวจแล้ว': by[m].done,
+      'เกินกำหนด': by[m].over, 'รอตรวจ': by[m].up,
+      'ตรวจแล้ว (%)': by[m].n ? Math.round(by[m].done/by[m].n*100) : 0
+    }));
+  },
+  exportPlanXlsx(list){
+    list = list || plans();
+    if(!list.length) return App.toast('ยังไม่มีแผนให้ส่งออก');
+    this.lib().then(XLSX=>{
+      const rows=this.planRows(list), sum=this.planSummary(rows);
+      const wb=XLSX.utils.book_new();
+      const add=(name,arr)=>{ if(!arr.length) return;
+        const ws=XLSX.utils.json_to_sheet(arr);
+        ws['!cols']=Object.keys(arr[0]).map(k=>({wch:Math.min(46,Math.max(10,k.length+6))}));
+        XLSX.utils.book_append_sheet(wb,ws,name); };
+      add('แผนการตรวจสาขา',rows); add('สรุปรายเดือน',sum);
+      XLSX.writeFile(wb,`แผนการตรวจสาขา_${this.bTag()}_${this.stamp()}.xlsx`);
+      App.toast('ส่งออกแผน '+rows.length+' รายการแล้ว');
     }).catch(e=>App.toast(e.message));
   },
   exportCsv(rows){
