@@ -1754,6 +1754,22 @@ function fvApplyPerms(){
 const HUB_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjGvhSuDrnnOkWdwoq4CsR5jM3__lp58ZWe_BjcrxDIoOtnlFaiEdKUXX10EANUFCRXA/exec';
 const JD_BRANCH_KEY = 'fab_jaedaeng_branches_v1';
 const SF_BRANCH_KEY = 'fab_branches_v1';
+const HUB_USERS_KEY = 'fqa_hub_users_v1';
+
+/* ทะเบียนสาขาของซานตาเฟ่เก็บผู้จัดการเขตเป็น "ชื่อเล่น" (พี่ปิ๊ก พี่บิ๊ก)
+   ซึ่งอ่านแล้วแยกคนไม่ออกเวลาชื่อเล่นคล้ายกัน และไม่เหมาะกับรายงานที่ส่งออกไปข้างนอก
+   ฮับมีชื่อจริงอยู่แล้วในทะเบียนผู้ใช้ จึงแปลงตอนอ่านเข้ามา
+   หาไม่เจอก็ใช้ชื่อเล่นเดิม ดีกว่าปล่อยว่าง */
+function hubUsers(){
+  try{ const a = JSON.parse(localStorage.getItem(HUB_USERS_KEY) || 'null'); return Array.isArray(a) ? a : []; }
+  catch(e){ return []; }
+}
+function bzmFullName(nick){
+  const n = String(nick || '').trim();
+  if(!n) return '';
+  const hit = hubUsers().find(u => u && u.role === 'bzm' && String(u.nick || '').trim() === n);
+  return (hit && String(hit.name || '').trim()) || n;
+}
 /* รหัสขึ้นต้นของแต่ละแบรนด์ในทะเบียนสาขา Santa Fe ของฮับ */
 const BRAND_PREFIX = { santafe:['50','55'], jaedaeng:['40'] };
 
@@ -1781,7 +1797,7 @@ const HubBranches = {
     return Object.keys(names)
       .filter(c=> pre.some(p=>String(c).startsWith(p)) && st[c]!=='closed')
       .sort()
-      .map(c=>({name:`${c} ${names[c]}`.trim(), bzm:(bz[c]||'').trim()}));
+      .map(c=>({name:`${c} ${names[c]}`.trim(), bzm:bzmFullName(bz[c])}));
   },
 
   /* แปลงข้อมูลดิบของฮับ → [{name,bzm}] ตามแบรนด์ปัจจุบัน */
@@ -1801,6 +1817,9 @@ const HubBranches = {
         try{
           if(Array.isArray(jd)) localStorage.setItem(JD_BRANCH_KEY, JSON.stringify(jd));
           if(sf && sf.branches)  localStorage.setItem(SF_BRANCH_KEY, JSON.stringify(sf));
+          /* เก็บทะเบียนผู้ใช้ไว้ด้วย — ใช้แปลงชื่อเล่นผู้จัดการเขตเป็นชื่อจริง
+             ต้องมีติดเครื่องไว้ ไม่งั้นตอนเปิดแอปแบบไม่มีเน็ตจะกลับไปเป็นชื่อเล่น */
+          if(Array.isArray(res.users)) localStorage.setItem(HUB_USERS_KEY, JSON.stringify(res.users));
         }catch(e){}
         return Brand.cur==='jaedaeng' ? (Array.isArray(jd)?jd:null) : (sf||null);
       });
