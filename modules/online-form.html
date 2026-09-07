@@ -167,6 +167,35 @@ details{border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin
 summary{font-weight:700;cursor:pointer}
 .txtblock{background:#f8f9fa;border-radius:10px;padding:11px 13px;margin-top:7px;white-space:pre-wrap;font-size:14px}
 
+/* ── หน้ารายชื่อ ── */
+.ppl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.ppl-head h2{margin:0 0 3px}
+
+/* ปุ่มเลือกแบบกดทีละอัน แทน dropdown ที่มีแค่สามตัวเลือก
+   เห็นครบพร้อมกันโดยไม่ต้องกดเปิด และแตะง่ายกว่าบนมือถือ */
+.field-label{font-weight:700;font-size:14px;display:block;margin-bottom:6px}
+.seg{display:flex;gap:7px;flex-wrap:wrap}
+.seg button{
+  flex:1 1 auto;min-width:76px;border:1px solid #d9dde4;background:#fff;
+  border-radius:10px;padding:9px 12px;font-weight:700;font-size:13.5px;color:#5b616b;
+}
+.seg button:hover{border-color:#b9c0ca}
+.seg button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* การนำเข้าจาก Excel ยังอยู่ แต่พับเก็บไว้ เพราะเป็นทางที่ใช้ครั้งแรกครั้งเดียว
+   ส่วนการเพิ่มทีละคนคือสิ่งที่ต้องทำบ่อยกว่า จึงได้ปุ่มอยู่บนสุด */
+.bulk{border:1px dashed #cfd4dc;border-radius:14px;background:#fbfcfd;overflow:hidden}
+.bulk summary{
+  cursor:pointer;padding:14px 18px;font-weight:700;font-size:14px;color:var(--muted);
+  list-style:none;display:flex;align-items:center;gap:9px;
+}
+.bulk summary::-webkit-details-marker{display:none}
+.bulk summary::before{content:"+";font-size:17px;line-height:1;color:var(--muted)}
+.bulk[open] summary::before{content:"−"}
+.bulk[open] summary{border-bottom:1px solid var(--line);color:var(--ink)}
+.bulk-body{padding:16px 18px 18px}
+.bulk-body .sub{margin-bottom:12px}
+
 /* ── ตัวแก้ไขฟอร์ม ── */
 .sec-edit{border:1px solid var(--line);border-radius:13px;padding:15px;margin-bottom:13px;background:#fcfcfd}
 .sec-edit .sec-top{display:grid;grid-template-columns:70px 1fr 90px auto;gap:9px;align-items:end;margin-bottom:11px}
@@ -1200,28 +1229,37 @@ function renderPeople(){
   const levels   = [...new Set(people.map(p => p.level).filter(Boolean))];
   $('#view').innerHTML = `
     <div class="card">
-      <h2>เพิ่มรายชื่อทีละหลายคน</h2>
-      <p class="sub">วางบรรทัดละ 1 คน คั่นด้วยจุลภาค ( , ) หรือ Tab — คัดลอกจาก Excel มาวางได้เลย<br>
-        รูปแบบ: <b>ชื่อ–นามสกุล, สาขา, ระดับ, หน้างาน</b> · ระดับและหน้างานเว้นว่างได้ถ้าฟอร์มไม่ได้ใช้</p>
-      <textarea id="impText" class="code" placeholder="สมหญิง ตั้งใจ, สามย่าน, silver, service&#10;อนันต์ พากเพียร, สามย่าน, gold, kitchen"></textarea>
-      <div class="row-btns" style="margin-top:12px">
-        <button class="btn btn-primary" onclick="importPeople()">เพิ่มรายชื่อ</button>
-        <span class="muted" style="align-self:center;font-size:13.5px">ชื่อซ้ำในสาขาเดิมจะถูกอัปเดตทับ ไม่สร้างซ้ำ</span>
+      <div class="ppl-head">
+        <div>
+          <h2>รายชื่อผู้ถูกประเมิน</h2>
+          <p class="sub" style="margin:0">คนที่ลาออกให้ใช้ “ปิดใช้งาน” แทนการลบ — ผลที่เคยกรอกไว้จะยังอยู่ครบ</p>
+        </div>
+        <button class="btn btn-primary" onclick="editPerson(null)">+ เพิ่มรายชื่อ</button>
       </div>
-    </div>
-    <div class="card">
-      <h2>รายชื่อในระบบ (${people.length})</h2>
-      <p class="sub">คนที่ลาออกให้ใช้ "ปิดใช้งาน" แทนการลบ — ผลที่เคยกรอกไว้จะยังอยู่ครบ</p>
-      <div class="grid3" style="margin-bottom:14px">
+      <div class="grid3" style="margin:16px 0 14px">
         <div><label>สาขา</label><select id="pfBranch">${opt('ทุกสาขา', branches, pf.branch)}</select></div>
         <div><label>ระดับ</label><select id="pfLevel">${opt('ทุกระดับ', levels, pf.level)}</select></div>
-        <div><label>ค้นหา</label><input id="pfQ" value="${esc(pf.q)}" placeholder="ชื่อ"></div>
+        <div><label>ค้นหา</label><input id="pfQ" value="${esc(pf.q)}" placeholder="พิมพ์ชื่อ"></div>
       </div>
       <div class="table-wrap"><table>
         <thead><tr><th>ชื่อ–นามสกุล</th><th>สาขา</th><th>ระดับ</th><th>หน้างาน</th><th>สถานะ</th><th></th></tr></thead>
         <tbody id="pBody"></tbody></table></div>
-      <div class="empty" id="pEmpty" style="display:none">ยังไม่มีรายชื่อ</div>
-    </div>`;
+      <div class="empty" id="pEmpty" style="display:none">ยังไม่มีรายชื่อ — กดปุ่ม “เพิ่มรายชื่อ” เพื่อเริ่ม</div>
+      <p class="muted" id="pCount" style="margin:12px 0 0;font-size:13px"></p>
+    </div>
+
+    <details class="bulk">
+      <summary>นำเข้าหลายคนพร้อมกันจาก Excel</summary>
+      <div class="bulk-body">
+        <p class="sub">คัดลอกจาก Excel มาวางได้เลย บรรทัดละ 1 คน คั่นด้วยจุลภาค ( , ) หรือ Tab<br>
+          รูปแบบ <b>ชื่อ–นามสกุล, สาขา, ระดับ, หน้างาน</b> — ระดับใส่ silver หรือ gold · หน้างานใส่ service หรือ kitchen<br>
+          สองช่องท้ายเว้นว่างได้ · ชื่อซ้ำในสาขาเดิมจะถูกอัปเดตทับ ไม่สร้างซ้ำ</p>
+        <textarea id="impText" class="code" placeholder="สมหญิง ตั้งใจ, สามย่าน, silver, service&#10;อนันต์ พากเพียร, สามย่าน, gold, kitchen"></textarea>
+        <div class="row-btns" style="margin-top:12px">
+          <button class="btn btn-secondary" onclick="importPeople()">นำเข้ารายชื่อ</button>
+        </div>
+      </div>
+    </details>`;
   ['pfBranch','pfLevel'].forEach(id => $('#'+id).onchange = () => { pf[id.slice(2).toLowerCase()] = $('#'+id).value; paintPeople(); });
   $('#pfQ').oninput = () => { pf.q = $('#pfQ').value; paintPeople(); };
   paintPeople();
@@ -1234,17 +1272,109 @@ function paintPeople(){
     (!pf.level  || p.level === pf.level) &&
     (!q || p.name.toLowerCase().includes(q)));
   $('#pEmpty').style.display = list.length ? 'none' : '';
+  const cnt = $('#pCount');
+  if (cnt) cnt.textContent = list.length === people.length
+    ? `ทั้งหมด ${people.length} คน`
+    : `แสดง ${list.length} คน จากทั้งหมด ${people.length} คน`;
   $('#pBody').innerHTML = list.map(p => `<tr>
     <td><b>${esc(p.name)}</b></td>
     <td>${esc(p.branch) || '<span class="muted">—</span>'}</td>
-    <td>${p.level ? `<span class="pill ${p.level}">${p.level==='gold'?'Gold':'Silver'}</span>` : '<span class="muted">—</span>'}</td>
-    <td>${p.station ? (p.station==='kitchen'?'ครัว':'บริการ') : '<span class="muted">—</span>'}</td>
+    <td>${p.level ? `<span class="pill ${p.level}">${LV(p.level)}</span>` : '<span class="muted">—</span>'}</td>
+    <td>${p.station ? ST(p.station) : '<span class="muted">—</span>'}</td>
     <td><span class="pill ${p.active?'pass':'off'}">${p.active?'ใช้งาน':'ปิดใช้งาน'}</span></td>
     <td class="row-btns">
+      <button class="btn btn-secondary btn-sm" onclick="editPerson(${p.id})">แก้ไข</button>
       <button class="btn btn-secondary btn-sm" onclick="togglePerson(${p.id})">${p.active?'ปิดใช้งาน':'เปิดใช้งาน'}</button>
       <button class="btn btn-danger btn-sm" onclick="delPerson(${p.id})">ลบ</button>
     </td></tr>`).join('');
 }
+
+/* ── เพิ่ม/แก้ไขทีละคน ──
+   ของเดิมเพิ่มได้ทางเดียวคือวางข้อความให้ถูกรูปแบบ พิมพ์ผิดตัวเดียวขึ้น error ทั้งบรรทัด
+   และแก้ชื่อที่สะกดผิดไม่ได้เลย ต้องลบแล้วเพิ่มใหม่
+   ซึ่งทำให้ผลประเมินที่เคยผูกกับคนเดิมกลายเป็นของกำพร้า */
+window.editPerson = function(id){
+  const p = id ? people.find(x => x.id === id) : null;
+  const branches = [...new Set(people.map(x => x.branch).filter(Boolean))].sort();
+  $('#modalBox').innerHTML = `
+    <div class="modal-head">
+      <h2>${p ? 'แก้ไขรายชื่อ' : 'เพิ่มรายชื่อ'}</h2>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">ปิด</button>
+    </div>
+    <div class="field">
+      <label for="peName">ชื่อ–นามสกุล</label>
+      <input id="peName" value="${esc(p ? p.name : '')}" placeholder="เช่น สมหญิง ตั้งใจ" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="peBranch">สาขา</label>
+      <input id="peBranch" list="peBranchList" value="${esc(p ? p.branch : (ME.isBranch ? ME.branch : ''))}" placeholder="พิมพ์ชื่อสาขา หรือเลือกจากที่มีอยู่" autocomplete="off">
+      <datalist id="peBranchList">${branches.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <span class="field-label">ระดับ</span>
+        <div class="seg" id="peLevel">
+          <button type="button" data-v="">ไม่ระบุ</button>
+          <button type="button" data-v="silver">Silver</button>
+          <button type="button" data-v="gold">Gold</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="field-label">หน้างานหลัก</span>
+        <div class="seg" id="peStation">
+          <button type="button" data-v="">ไม่ระบุ</button>
+          <button type="button" data-v="service">บริการ</button>
+          <button type="button" data-v="kitchen">ครัว</button>
+        </div>
+      </div>
+    </div>
+    <p class="sub">ระดับกับหน้างานใช้คัดว่าใครต้องตอบคำถามชุดไหน ถ้าฟอร์มไม่ได้ใช้ก็เว้น “ไม่ระบุ” ไว้ได้</p>
+    <div class="row-btns">
+      <button class="btn btn-primary" onclick="savePerson(${p ? p.id : 'null'})">${p ? 'บันทึกการแก้ไข' : 'เพิ่มรายชื่อ'}</button>
+      <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+    </div>`;
+  segSet('peLevel',   p ? (p.level   || '') : '');
+  segSet('peStation', p ? (p.station || '') : '');
+  $('#modal').classList.add('show');
+  setTimeout(() => { const el = $('#peName'); if (el) el.focus(); }, 50);
+};
+
+/* ปุ่มเลือกแบบกดทีละอัน — ใช้แทน dropdown เพราะมีแค่สามตัวเลือก
+   เห็นครบพร้อมกันโดยไม่ต้องกดเปิด และแตะง่ายกว่าบนมือถือ */
+function segSet(id, val){
+  const box = document.getElementById(id);
+  if (!box) return;
+  box.dataset.val = val;
+  box.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('on', b.dataset.v === val);
+    b.onclick = () => segSet(id, b.dataset.v);
+  });
+}
+function segGet(id){
+  const box = document.getElementById(id);
+  return box ? (box.dataset.val || '') : '';
+}
+
+window.savePerson = async function(id){
+  const name    = $('#peName').value.trim();
+  const branch  = $('#peBranch').value.trim();
+  const level   = segGet('peLevel');
+  const station = segGet('peStation');
+  if (!name)   return msg('ยังไม่ได้กรอกชื่อ', 'err');
+  if (!branch) return msg('ยังไม่ได้กรอกสาขา', 'err');
+
+  const row = { name, branch, level, station };
+  const q = id ? SB.from('of_people').update(row).eq('id', id)
+               : SB.from('of_people').insert(Object.assign({ active: true }, row));
+  const { error } = await q;
+  if (error){
+    if (error.code === '23505') return msg(`มี <b>${esc(name)}</b> ในสาขา <b>${esc(branch)}</b> อยู่แล้ว`, 'err');
+    return msg('บันทึกไม่สำเร็จ — ' + esc(error.message), 'err');
+  }
+  closeModal();
+  msg(id ? 'บันทึกการแก้ไขเรียบร้อย' : `เพิ่ม <b>${esc(name)}</b> เรียบร้อย`);
+  await loadPeople(); renderPeople();
+};
 
 window.importPeople = async function(){
   const lines = $('#impText').value.split('\n').map(l => l.trim()).filter(Boolean);
@@ -1255,7 +1385,7 @@ window.importPeople = async function(){
     if (!c[0]) return bad.push(`บรรทัด ${i+1}: ไม่มีชื่อ`);
     if (!c[1]) return bad.push(`บรรทัด ${i+1}: ไม่มีสาขา`);
     const level = (c[2]||'').toLowerCase(), station = (c[3]||'').toLowerCase();
-    if (level && !['silver','gold'].includes(level))       return bad.push(`บรรทัด ${i+1}: ระดับต้องเป็น silver หรือ gold (ได้ "${c[2]}")`);
+    if (level && !['silver','gold'].includes(level))         return bad.push(`บรรทัด ${i+1}: ระดับต้องเป็น silver หรือ gold (ได้ "${c[2]}")`);
     if (station && !['service','kitchen'].includes(station)) return bad.push(`บรรทัด ${i+1}: หน้างานต้องเป็น service หรือ kitchen (ได้ "${c[3]}")`);
     out.push({ name:c[0], branch:c[1], level, station, active:true });
   });
@@ -1263,7 +1393,7 @@ window.importPeople = async function(){
 
   const { error } = await SB.from('of_people').upsert(out, { onConflict:'branch,name' });
   if (error) return msg('เพิ่มรายชื่อไม่สำเร็จ — ' + esc(error.message), 'err');
-  msg(`เพิ่ม/อัปเดตรายชื่อ ${out.length} คนเรียบร้อย`);
+  msg(`นำเข้ารายชื่อ ${out.length} คนเรียบร้อย`);
   await loadPeople(); renderPeople();
 };
 
@@ -1281,6 +1411,7 @@ window.delPerson = async function(id){
   if (error) return msg('ลบไม่สำเร็จ — ' + esc(error.message), 'err');
   msg('ลบเรียบร้อย'); await loadPeople(); paintPeople();
 };
+
 
 /* ══════════════════════════════════════════════════════════════════
    จัดการฟอร์ม — สร้าง/แก้คำถาม/เปิด-ปิด
