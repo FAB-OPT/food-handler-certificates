@@ -5080,14 +5080,6 @@ function _menuSkeletonHTML() {
     + '<div style="grid-column:1/-1;text-align:center;font-size:13px;color:#64748b;padding:6px 0 2px">กำลังตรวจสิทธิ์การใช้งาน…</div>';
 }
 
-/* หมวดของแต่ละระบบ — เขียนไว้ตรงนี้ที่เดียว ไม่กระจายไปตามชื่อการ์ด
-   ระบบที่ไม่ได้ระบุจะไปกองอยู่หมวด "อื่น ๆ" ซึ่งเห็นได้ชัดว่าตกหล่น
-   ดีกว่าเงียบ ๆ หายไปหรือไปโผล่ผิดที่ */
-var HUB_GROUPS = [
-  { id:'store',  title:'ตรวจมาตรฐานร้าน', ids:['checklist-santafe','checklist-jaedaeng','checklist-yamachan'] },
-  { id:'visit',  title:'ตรวจสาขา',        ids:['fqa-visit-santafe','fqa-visit'] },
-  { id:'people', title:'อบรมและสอบ',      ids:['training-record','online-exam','online-form','food-handler'] },
-];
 /* สีแถบซ้ายการ์ด = สีแบรนด์ที่ระบบนั้นดูแล · ระบบกลาง ๆ ใช้สีเทา
    เอาจากทะเบียนแบรนด์ก่อน เปลี่ยนสีแบรนด์ที่เดียวแล้วหน้านี้ตามเอง */
 /* ระบบไหนเป็นของแบรนด์ไหน — ระบุด้วย id ตรง ๆ ก่อน
@@ -5146,13 +5138,6 @@ function _hubWatermark(id) {
   return '<span class="mc-wm"><svg viewBox="0 0 24 24">' + HUB_ICONS[_hubIconKey(id)] + '</svg></span>';
 }
 
-function _hubGroupOf(sysId) {
-  for (var i = 0; i < HUB_GROUPS.length; i++) {
-    if (HUB_GROUPS[i].ids.indexOf(sysId) >= 0) return HUB_GROUPS[i].id;
-  }
-  return 'other';
-}
-
 function renderMenuCards() {
   var grid = document.getElementById('menuGrid');
   if (!grid) return;
@@ -5164,8 +5149,9 @@ function renderMenuCards() {
   var _isAdminRole = !!(_curUser && _curUser.role === 'admin');
   /* เก็บ html ของแต่ละใบแยกตามหมวดก่อน แล้วค่อยประกอบทีเดียว
      ลำดับภายในหมวดยังเป็นลำดับใน SYSTEMS เหมือนเดิม การลากจัดลำดับจึงยังใช้ได้ */
-  var _bucket = {}, _soon = [];   // _soon = ระบบที่ยังไม่เปิด ดันไปท้ายสุดเสมอ
-  var _push = function (gid, h) { (_bucket[gid] = _bucket[gid] || []).push(h); };
+  /* _ord = การ์ดตามลำดับใน SYSTEMS ซึ่งคือลำดับที่แอดมินลากไว้
+     _soon = ระบบที่ยังไม่เปิด ดันไปท้ายสุดเสมอ ไม่ว่าจะลากไว้ตรงไหน */
+  var _ord = [], _soon = [];
   /* คำค้น — ตัดช่องว่างและตัวพิมพ์ทิ้ง เทียบกับชื่อและคำอธิบาย
      ค้นแล้วไม่แบ่งหมวด เพราะคนที่พิมพ์ค้นหารู้อยู่แล้วว่าจะเอาอะไร
      หมวดตอนนั้นกลายเป็นตัวขวางมากกว่าตัวช่วย */
@@ -5240,13 +5226,13 @@ function renderMenuCards() {
     }
     card += '</div>';
     card += '</div>';
-    if (isComingSoon) _soon.push(card); else _push(_hubGroupOf(s.id), card);
+    if (isComingSoon) _soon.push(card); else _ord.push(card);
   });
 
 
   /* ค้นหาอยู่ = ไม่ต้องแบ่งหมวด แสดงผลที่ตรงคำค้นรวดเดียว */
   if (_q) {
-    var found = Object.keys(_bucket).reduce(function (a, k) { return a.concat(_bucket[k]); }, []).concat(_soon);
+    var found = _ord.concat(_soon);
     grid.innerHTML = found.length
       ? '<div class="menu-grid">' + found.join('') + '</div>'
       : '<div class="hub-empty">ไม่พบระบบที่ตรงกับ “' + escapeHtml(_qEl.value.trim()) + '”</div>';
@@ -5255,12 +5241,15 @@ function renderMenuCards() {
     return;
   }
 
-  /* ไม่แบ่งหมวด — การ์ดทั้งหมดเรียงต่อกันในตารางเดียว
-     แต่ยังเรียงตามลำดับหมวดที่ตั้งไว้ ระบบพวกเดียวกันจึงยังอยู่ติดกัน */
-  var _all = HUB_GROUPS.concat([{ id:'other' }]).reduce(function (a, g) {
-    return a.concat(_bucket[g.id] || []);
-  }, []);
-  _all = _all.concat(_soon);
+  /* เรียงตามลำดับที่แอดมินลากไว้ ไม่จัดกลุ่มทับ
+
+     ของเดิมเอาการ์ดไปเรียงตามหมวด (ตรวจมาตรฐานร้าน → ตรวจสาขา → อบรมและสอบ)
+     ผลคือลากแล้วบันทึกสำเร็จ แต่หน้าจอไม่ขยับ เพราะการ์ดข้ามหมวดไม่ได้
+     เช่นลากแบบฟอร์มออนไลน์ขึ้นบนสุดจนบันทึกเป็นลำดับที่ 1 แล้ว
+     แต่ยังโผล่กลางหน้าเพราะติดอยู่ในหมวดสุดท้าย
+
+     หมวดไม่ได้มีหัวข้อให้เห็นด้วยซ้ำ จึงมีแต่ผลข้างเคียง ไม่มีประโยชน์ที่มองเห็น */
+  var _all = _ord.concat(_soon);
   if (_all.length) html += '<div class="menu-grid">' + _all.join('') + '</div>';
 
   if (_isAdminRole) {
@@ -5386,9 +5375,10 @@ function _sysDrop(ev, targetId) {
   var fromIdx = SYSTEMS.findIndex(function(x){ return x.id === _draggedSysId; });
   var toIdx   = SYSTEMS.findIndex(function(x){ return x.id === targetId; });
   if (fromIdx < 0 || toIdx < 0) return;
-  // Move dragged item before target
+  /* ดึงออกก่อนแล้วตำแหน่งหลังจากนั้นจะเลื่อนขึ้นหนึ่งช่อง
+     ถ้าลากลงล่างต้องลบหนึ่ง ไม่งั้นการ์ดจะไปหยุดเลยจุดที่ปล่อยไปหนึ่งใบ */
   var moved = SYSTEMS.splice(fromIdx, 1)[0];
-  SYSTEMS.splice(toIdx, 0, moved);
+  SYSTEMS.splice(fromIdx < toIdx ? toIdx - 1 : toIdx, 0, moved);
   _persistSystemsOrder_();
 }
 function _sysDragEnd(ev) {
