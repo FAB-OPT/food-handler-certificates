@@ -291,6 +291,14 @@ const SB_URL = 'https://pzspcjqlxoqnbtvlfjsy.supabase.co';
 const SB_KEY = 'sb_publishable_n1w7k8mdxGbtaHKZ4xnNWA_wxUHhEtP';
 
 const SB  = window.supabase.createClient(SB_URL, SB_KEY);
+
+/* ล็อกอินแบบไม่ระบุตัวตน — ต้องมีก่อนล็อก policy
+   ตารางนี้เก็บรายชื่อผู้ถูกประเมินและคำตอบรายบุคคล ไม่ควรเปิดให้ใครก็อ่านได้
+   ล้มเหลวไม่ปิดระบบ — ตอน policy ยังเปิดอยู่ก็ทำงานได้ปกติ */
+const SB_AUTH = SB.auth.signInAnonymously()
+  .then(function (r) { return !(r && r.error); })
+  .catch(function () { return false; });
+function sbReady() { return SB_AUTH; }
 const $   = s => document.querySelector(s);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -579,6 +587,7 @@ function scoreOf(form, secs, answers, meta){
    โหลดข้อมูล
    ══════════════════════════════════════════════════════════════════ */
 async function boot(){
+  await sbReady();              // รอล็อกอิน Supabase ก่อนแตะตาราง
   renderWho();
   if (!ME.ok){
     $('#view').innerHTML = `<div class="card"><div class="empty">
@@ -630,16 +639,19 @@ async function boot(){
 }
 
 async function loadResponses(){
+  await sbReady();              // รอล็อกอิน Supabase ก่อนแตะตาราง
   const { data, error } = await SB.from('of_responses').select('*').order('created_at', { ascending:false });
   if (error){ msg('โหลดผลไม่สำเร็จ — ' + esc(error.message), 'err'); return; }
   responses = data || [];
 }
 async function loadPeople(){
+  await sbReady();              // รอล็อกอิน Supabase ก่อนแตะตาราง
   const { data, error } = await SB.from('of_people').select('*').order('branch').order('name');
   if (error){ msg('โหลดรายชื่อไม่สำเร็จ — ' + esc(error.message), 'err'); return; }
   people = data || [];
 }
 async function loadForms(){
+  await sbReady();              // รอล็อกอิน Supabase ก่อนแตะตาราง
   const { data, error } = await SB.from('of_forms').select('*').order('sort_order').order('id');
   if (error){ msg('โหลดฟอร์มไม่สำเร็จ — ' + esc(error.message), 'err'); return; }
   forms = data || [];
@@ -997,6 +1009,7 @@ function onNext(){
 }
 
 async function submit(){
+  await sbReady();              // รอล็อกอิน Supabase ก่อนแตะตาราง
   const form = fill.form, sub = fill.subject || {}, meta = fill.meta || {};
   const btn = $('#btnNext'); btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
 

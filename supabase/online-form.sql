@@ -108,20 +108,27 @@ create unique index if not exists of_resp_once
 -- ── สิทธิ์การเข้าถึง ─────────────────────────────────────────────────
 -- หน้าเว็บเป็นไฟล์ static ใช้ publishable key ฝั่งผู้ใช้
 -- การแบ่งสิทธิ์ "สาขาเห็นแค่ฟอร์ม · แอดมินเห็นผล" ทำที่หน้าจอตาม fab_session
--- ไม่ใช่ที่ฐานข้อมูล — คนที่รู้วิธีเรียก API ตรง ๆ ยังอ่านข้อมูลได้
--- ถ้าต้องปิดสนิทต้องต่อ Supabase Auth เพิ่ม
+--
+-- 7 ก.ย. 2569: เปลี่ยนจาก anon เป็น authenticated
+-- ของเดิมคนที่รู้วิธีเรียก API ตรง ๆ อ่านคำตอบรายบุคคลได้หมด
+-- ตอนนี้หน้าเว็บล็อกอินแบบไม่ระบุตัวตนให้เองตอนเปิด (ต้องเปิด
+-- "Allow anonymous sign-ins" ใน Dashboard ก่อน) — ดู supabase/lock-rls.sql
+-- ยังไม่ใช่การแยกสิทธิ์รายคน แต่ปิดช่องยิงตรงเข้า API จากนอกระบบแล้ว
 alter table public.of_forms     enable row level security;
 alter table public.of_people    enable row level security;
 alter table public.of_responses enable row level security;
 
 drop policy if exists of_forms_all on public.of_forms;
-create policy of_forms_all on public.of_forms for all using (true) with check (true);
+drop policy if exists of_forms_all_auth on public.of_forms;
+create policy of_forms_all_auth on public.of_forms for all to authenticated using (true) with check (true);
 
 drop policy if exists of_people_all on public.of_people;
-create policy of_people_all on public.of_people for all using (true) with check (true);
+drop policy if exists of_people_all_auth on public.of_people;
+create policy of_people_all_auth on public.of_people for all to authenticated using (true) with check (true);
 
 drop policy if exists of_resp_all on public.of_responses;
-create policy of_resp_all on public.of_responses for all using (true) with check (true);
+drop policy if exists of_resp_all_auth on public.of_responses;
+create policy of_resp_all_auth on public.of_responses for all to authenticated using (true) with check (true);
 
 
 -- ── ล้างตารางรุ่นทดลอง sg_* ที่สร้างไว้ก่อนหน้า (ถ้ามี) ──────────────

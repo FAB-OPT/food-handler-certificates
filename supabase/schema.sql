@@ -95,10 +95,12 @@ create index if not exists fh_employees_empid_idx on public.fh_employees (emp_id
 
 -- ═══════════════════════════════════════════════════════════════
 --  RLS
---  หมายเหตุความปลอดภัย: หน้าเว็บเรียกด้วย anon key จากเบราว์เซอร์ตรง ๆ
---  จึงต้องเปิดให้ anon อ่าน/เขียนได้ = ระดับเดียวกับ Apps Script web app
---  ที่ตั้ง "Anyone" อยู่ตอนนี้ ไม่ได้แย่ลง แต่ก็ไม่ได้ปลอดภัยขึ้น
---  ถ้าจะรัดกุมกว่านี้ต้องมี auth จริง (Supabase Auth) แล้วค่อยล็อก policy ตาม role
+--  7 ก.ย. 2569: เปลี่ยนจาก anon เป็น authenticated แล้ว
+--  ของเดิมเปิดให้ anon อ่านเขียนได้ทุกตาราง ซึ่งแปลว่าใครถือคีย์ที่อยู่ในหน้าเว็บ
+--  สาธารณะก็ดึงรายชื่อพนักงานพร้อมเลขบัตรประชาชนออกไปได้ทั้ง 1,987 แถว
+--  ตอนนี้แอปล็อกอินแบบไม่ระบุตัวตนให้เองตอนเปิดหน้า ผู้ใช้ไม่ต้องทำอะไรเพิ่ม
+--  (ต้องเปิด "Allow anonymous sign-ins" ใน Dashboard ก่อน ไม่งั้นล็อกอินไม่ผ่าน)
+--  ดู supabase/lock-rls.sql ซึ่งทำแบบเดียวกันกับทุกตารางในโปรเจกต์
 -- ═══════════════════════════════════════════════════════════════
 alter table public.fh_config       enable row level security;
 alter table public.fh_requests     enable row level security;
@@ -110,9 +112,10 @@ declare t text;
 begin
   foreach t in array array['fh_config','fh_requests','fh_certificates','fh_employees'] loop
     execute format('drop policy if exists %I on public.%I', t || '_anon_all', t);
+    execute format('drop policy if exists %I on public.%I', t || '_auth_all', t);
     execute format(
-      'create policy %I on public.%I for all to anon using (true) with check (true)',
-      t || '_anon_all', t);
+      'create policy %I on public.%I for all to authenticated using (true) with check (true)',
+      t || '_auth_all', t);
   end loop;
 end $$;
 

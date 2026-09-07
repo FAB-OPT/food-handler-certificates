@@ -6327,7 +6327,8 @@ function openStorageModal() {
 }
 
 /* เติมเลขฝั่ง Supabase ให้ตารางทันทีที่เปิด — head:true ไม่ดึงข้อมูล จึงเร็วมาก */
-function hubLoadSbCounts() {
+async function hubLoadSbCounts() {
+  await hubSbReady();           // รอล็อกอิน Supabase ก่อนแตะตาราง
   if (!HUB_SB.ready) return;
   HUB_TABLES.forEach(function(t){
     HUB_SB.client.from(t.table).select('*', { count: 'exact', head: true }).then(function(r){
@@ -6456,15 +6457,26 @@ var HUB_SB = {
     try {
       HUB_SB.client = window.supabase.createClient(HUB_SB.url, HUB_SB.key);
       HUB_SB.ready = true;
+      /* ล็อกอินแบบไม่ระบุตัวตน — ต้องมีก่อนล็อก policy ของ Supabase
+         ตอนนี้ตารางทั้งหมดเปิดให้ anon อ่านเขียนได้ ซึ่งแปลว่าใครถือคีย์ที่อยู่ใน
+         หน้าเว็บสาธารณะ ดึงรายชื่อพนักงานพร้อมเลขบัตรประชาชนออกไปได้ทั้งก้อน
+         ล้มเหลวไม่ปิดระบบ — ตอน policy ยังเปิดอยู่ก็ทำงานได้ปกติ */
+      HUB_SB.auth = HUB_SB.client.auth.signInAnonymously()
+        .then(function (r) { return !(r && r.error); })
+        .catch(function () { return false; });
     } catch (e) { console.warn('[HUB] ต่อ Supabase ไม่ได้ — ใช้ Google Sheets ต่อ', e); }
   }
 })();
+
+/* รอให้ล็อกอิน Supabase เสร็จก่อนแตะตาราง — ไม่มี client ก็ไปต่อได้ (ระบบถอยไปใช้ Sheets) */
+function hubSbReady() { return HUB_SB.auth || Promise.resolve(false); }
 
 /* คีย์ที่เก็บใน fh_config — ต้องตรงกับที่ getConfig ของ Apps Script คืนมา */
 var HUB_CFG_KEYS = ['systems','announcements','users','branches','jaedaengBranches','perms'];
 
 /* อ่าน config จาก Supabase → จัดรูปให้เหมือน getConfig เป๊ะ เพื่อไม่ต้องแก้โค้ดที่เรียกใช้ */
-function _sbLoadConfig() {
+async function _sbLoadConfig() {
+  await hubSbReady();           // รอล็อกอิน Supabase ก่อนแตะตาราง
   return HUB_SB.client.from('fh_config').select('key,value')
     .then(function(res){
       if (res.error) throw res.error;
@@ -6477,7 +6489,8 @@ function _sbLoadConfig() {
     });
 }
 /* เขียน config 1 คีย์ลง Supabase */
-function _sbSaveConfig(key, value) {
+async function _sbSaveConfig(key, value) {
+  await hubSbReady();           // รอล็อกอิน Supabase ก่อนแตะตาราง
   return HUB_SB.client.from('fh_config')
     .upsert({ key: key, value: value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
     .then(function(res){ if (res.error) throw res.error; return { ok: true }; });
@@ -6592,7 +6605,8 @@ function _hubGetSheets(action, timeoutMs, tries, onRetry) {
 }
 
 /* ย้ายทีละตาราง — ปลายทางมีข้อมูลอยู่แล้วจะข้าม (ไม่ยัดซ้ำ) */
-function hubMigrateTable(t, onStep) {
+async function hubMigrateTable(t, onStep) {
+  await hubSbReady();           // รอล็อกอิน Supabase ก่อนแตะตาราง
   if (!HUB_SB.ready) return Promise.reject(new Error('ยังไม่ได้เปิดใช้ Supabase'));
   return HUB_SB.client.from(t.table).select('*', { count: 'exact', head: true })
     .then(function(res){
@@ -6643,7 +6657,8 @@ function hubMigrateAll(onStep) {
 
 /* เทียบจำนวน 2 ฝั่งทุกตาราง — รายงานผลทีละบรรทัดผ่าน onRow ไม่ต้องรอจนครบ
    ฝั่ง Supabase นับเร็วมาก (head:true ไม่ดึงข้อมูล) · ฝั่ง Sheets ต้องโหลดทั้งก้อน จึงช้า */
-function hubCompareAll(onRow) {
+async function hubCompareAll(onRow) {
+  await hubSbReady();           // รอล็อกอิน Supabase ก่อนแตะตาราง
   if (!HUB_SB.ready) return Promise.reject(new Error('ยังไม่ได้เปิดใช้ Supabase'));
   var out = [], seq;
   // ทางเร็ว: ?action=counts นับให้เลย ไม่ต้องโหลดข้อมูลทั้งก้อน (ต้อง deploy Code.gs ใหม่)
@@ -6684,7 +6699,8 @@ function hubCompareAll(onRow) {
 
 /* ═══════════ ย้ายข้อมูล Config: Sheets → Supabase (เก็บไว้ใช้เดี่ยว ๆ) ═══════════
    ปลอดภัย: อ่านจาก Sheets อย่างเดียว ไม่แตะข้อมูลต้นทาง */
-function hubSbMigrateConfig() {
+async function hubSbMigrateConfig() {
+  await hubSbReady();           // รอล็อกอิน Supabase ก่อนแตะตาราง
   if (!HUB_SB.ready) return Promise.reject(new Error('ยังไม่ได้เปิดใช้ Supabase'));
   return fetch(SCRIPT_URL + '?action=config&_=' + Date.now(), { method: 'GET' })
     .then(function(r){ return r.text(); })
@@ -6729,7 +6745,8 @@ function _cfgDeepEqual(a, b) {
 }
 
 /* เทียบ 2 ฝั่งว่าตรงกันไหม */
-function hubSbCompareConfig() {
+async function hubSbCompareConfig() {
+  await hubSbReady();           // รอล็อกอิน Supabase ก่อนแตะตาราง
   if (!HUB_SB.ready) return Promise.reject(new Error('ยังไม่ได้เปิดใช้ Supabase'));
   return Promise.all([
     fetch(SCRIPT_URL + '?action=config&_=' + Date.now()).then(function(r){ return r.text(); })
