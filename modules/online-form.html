@@ -196,6 +196,29 @@ summary{font-weight:700;cursor:pointer}
 .bulk-body{padding:16px 18px 18px}
 .bulk-body .sub{margin-bottom:12px}
 
+/* ── ตัวเลือกในตัวแก้ไขฟอร์ม — แทนที่ช่อง JSON เดิม ── */
+.when-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+.pass-rows{display:flex;flex-wrap:wrap;gap:9px 20px;margin-top:11px}
+.pass-rows[hidden],#eFilterBox[hidden]{display:none}
+.chk-row{display:flex;flex-wrap:wrap;gap:9px 20px;margin-top:9px}
+.inline{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;font-weight:500;line-height:1.7}
+.inline input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:var(--orange);margin:0}
+.inline input[type=number]{width:74px;padding:7px 9px;text-align:center;font-weight:700}
+.ko-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto auto;gap:9px;align-items:center;
+  border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:9px;background:#fcfcfd;
+}
+.ko-row select,.ko-row input{padding:8px 10px;font-size:14px}
+.ko-row input[type=number]{width:76px;text-align:center}
+.ko-empty{color:var(--muted);font-size:14px;padding:4px 0 2px}
+@media(max-width:640px){
+  .when-row{grid-template-columns:1fr}
+  .ko-row{grid-template-columns:1fr auto;gap:8px 10px}
+  .ko-row>select{grid-column:1/-1}
+  .ko-row>input[type=number],.ko-row>span{justify-self:start}
+  .ko-row .ko-del{grid-column:1/-1;justify-self:start}
+}
+
 /* ── ตัวแก้ไขฟอร์ม ── */
 .sec-edit{border:1px solid var(--line);border-radius:13px;padding:15px;margin-bottom:13px;background:#fcfcfd}
 .sec-edit .sec-top{display:grid;grid-template-columns:70px 1fr 90px auto;gap:9px;align-items:end;margin-bottom:11px}
@@ -1341,14 +1364,15 @@ window.editPerson = function(id){
 
 /* ปุ่มเลือกแบบกดทีละอัน — ใช้แทน dropdown เพราะมีแค่สามตัวเลือก
    เห็นครบพร้อมกันโดยไม่ต้องกดเปิด และแตะง่ายกว่าบนมือถือ */
-function segSet(id, val){
+function segSet(id, val, cb){
   const box = document.getElementById(id);
   if (!box) return;
   box.dataset.val = val;
   box.querySelectorAll('button').forEach(b => {
     b.classList.toggle('on', b.dataset.v === val);
-    b.onclick = () => segSet(id, b.dataset.v);
+    b.onclick = () => segSet(id, b.dataset.v, cb);
   });
+  if (cb) cb(val);
 }
 function segGet(id){
   const box = document.getElementById(id);
@@ -1495,6 +1519,107 @@ window.delForm = async function(id){
   msg('ลบเรียบร้อย'); go('forms');
 };
 
+/* ── ตัวช่วยแปลงค่าที่เก็บใน rules/scale/subject_filter ให้เป็นค่าของช่องกรอก ──
+   ข้อมูลยังเก็บรูปแบบเดิมทุกอย่าง เปลี่ยนแค่วิธีกรอกจากพิมพ์ JSON เป็นกดเลือก */
+const SCALE_YESNO = [
+  { v:5, label:'ผ่าน',    hint:'ทำได้ตามมาตรฐาน' },
+  { v:1, label:'ไม่ผ่าน', hint:'ยังทำไม่ได้' },
+  { v:'na', label:'N/A',  hint:'ยังไม่ได้ดู' }
+];
+function scaleKind(f){
+  const sc = f.scale || [];
+  if (sc.filter(o => o.v !== 'na').length === 2) return 'yesno';
+  return sc.some(o => o.v === 'na') ? '1-5-na' : '1-5';
+}
+function passMode(f){ const p = (f.rules||{}).pass; return (p && p.by === 'level') ? 'level' : 'one'; }
+function passOne(f){
+  const p = (f.rules||{}).pass;
+  if (typeof p === 'number') return p;
+  return (p && p.default != null) ? p.default : 70;
+}
+function passOf(f, lv){
+  const p = (f.rules||{}).pass;
+  if (typeof p === 'number') return p;
+  const m = (p && p.map) || {};
+  if (m[lv] != null) return m[lv];
+  if (p && p.default != null) return p.default;
+  return lv === 'gold' ? 80 : 70;
+}
+function hasF(f, k, v){
+  const a = (f.subject_filter || {})[k];
+  return Array.isArray(a) ? a.includes(v) : a === v;
+}
+
+/* ── เงื่อนไขตกทันที (knockouts) ── */
+function koList(){
+  editing.rules = editing.rules || {};
+  if (!Array.isArray(editing.rules.knockouts)) editing.rules.knockouts = [];
+  return editing.rules.knockouts;
+}
+function secLabels(){
+  const seen = [];
+  (editing.sections||[]).forEach(s => { if (s.label && !seen.includes(s.label)) seen.push(s.label); });
+  return seen;
+}
+function renderKoList(){
+  const box = document.getElementById('eKoList');
+  if (!box) return;
+  const list = koList(), labels = secLabels();
+  if (!list.length){ box.innerHTML = '<p class="ko-empty">ยังไม่มีเงื่อนไข — ตัดสินจากคะแนนรวมอย่างเดียว</p>'; return; }
+  box.innerHTML = list.map((k,i) => {
+    const isPct = k.type === 'minPct';
+    const lvl = (k.when || {}).level || '';
+    return `<div class="ko-row">
+      <select onchange="setKo(${i},'type',this.value)">
+        <option value="minScore" ${!isPct?'selected':''}>มีข้อที่ได้คะแนนต่ำเกินไป</option>
+        <option value="minPct" ${isPct?'selected':''}>คะแนนทั้งหมวดต่ำเกินไป</option>
+      </select>
+      <select onchange="setKo(${i},'section',this.value)">
+        ${labels.map(L => `<option value="${esc(L)}" ${k.section===L?'selected':''}>หมวด ${esc(L)}</option>`).join('')}
+      </select>
+      <input type="number" min="0" max="100" value="${isPct ? (k.pct??70) : (k.min??2)}"
+             onchange="setKo(${i},'${isPct?'pct':'min'}',+this.value)">
+      <span class="muted" style="font-size:13.5px">${isPct?'% ขึ้นไป':'คะแนนขึ้นไป'}</span>
+      <select onchange="setKo(${i},'level',this.value)">
+        <option value="" ${!lvl?'selected':''}>ทุกระดับ</option>
+        <option value="silver" ${lvl==='silver'?'selected':''}>เฉพาะ Silver</option>
+        <option value="gold" ${lvl==='gold'?'selected':''}>เฉพาะ Gold</option>
+      </select>
+      <button class="btn btn-danger btn-sm ko-del" onclick="delKo(${i})">ลบ</button>
+    </div>`;
+  }).join('');
+}
+window.addKo = () => {
+  const labels = secLabels();
+  if (!labels.length) return msg('ยังไม่มีหมวดคำถาม — เพิ่มหมวดก่อน', 'err');
+  koList().push({ type:'minScore', section:labels[0], min:2, when:{} });
+  renderKoList();
+};
+window.delKo = i => { koList().splice(i,1); renderKoList(); };
+window.setKo = (i,k,v) => {
+  const ko = koList()[i];
+  if (!ko) return;
+  if (k === 'level'){ ko.when = v ? { level:v } : {}; }
+  else if (k === 'type'){
+    ko.type = v;
+    if (v === 'minPct'){ ko.pct = ko.pct ?? 70; delete ko.min; }
+    else { ko.min = ko.min ?? 2; delete ko.pct; }
+    delete ko.note;            /* คำอธิบายเดิมไม่ตรงกับเงื่อนไขใหม่แล้ว */
+    renderKoList(); return;
+  }
+  else ko[k] = v;
+};
+
+/* แสดง/ซ่อนช่องที่เกี่ยวข้องกับตัวเลือกที่กดอยู่ */
+function syncEditorParts(){
+  const lvl = segGet('ePassMode') === 'level';
+  const one = document.getElementById('ePassOne'), many = document.getElementById('ePassLevel');
+  if (one)  one.hidden  = lvl;
+  if (many) many.hidden = !lvl;
+  const box = document.getElementById('eFilterBox'), req = document.getElementById('eSubReq');
+  if (box && req) box.hidden = !req.checked;
+}
+
 function renderEditor(){
   const f = editing;
   const totalByVariant = {};
@@ -1552,17 +1677,54 @@ function renderEditor(){
 
     <div class="card">
       <h2>เกณฑ์คะแนนและกติกา</h2>
-      <p class="sub">แก้เป็น JSON — ดูรูปแบบได้ท้ายไฟล์ <b>supabase/online-form.sql</b></p>
-      <div class="field"><label>ตัวเลือกคะแนน (scale)</label>
-        <textarea id="eScale" class="code">${esc(JSON.stringify(f.scale||[], null, 1))}</textarea></div>
-      <div class="field"><label>เกณฑ์ผ่านและ knockout (rules)</label>
-        <textarea id="eRules" class="code">${esc(JSON.stringify(f.rules||{}, null, 1))}</textarea></div>
-      <div class="field"><label>เงื่อนไขคัดรายชื่อผู้ถูกประเมิน (subject_filter)</label>
-        <textarea id="eFilter" class="code">${esc(JSON.stringify(f.subject_filter||{}, null, 1))}</textarea>
-        <p class="sub" style="margin:6px 0 0;font-size:13px">เช่น <code>{"level":["silver","gold"]}</code> · ใส่ <code>{}</code> = ใช้ได้ทุกคนในรายชื่อ</p></div>
-      <div class="field"><label style="display:flex;gap:9px;align-items:center;font-weight:400">
-        <input type="checkbox" id="eSubReq" ${f.subject_required?'checked':''} style="width:18px;height:18px;accent-color:var(--orange)">
-        ฟอร์มนี้ต้องเลือกคนที่ถูกประเมิน (ถ้าไม่ติ๊ก = แบบสำรวจทั่วไป 1 คนตอบได้ 1 ครั้ง)</label></div>
+      <p class="sub">ตั้งค่าจากช่องด้านล่างได้เลย ไม่ต้องพิมพ์โค้ด</p>
+
+      <div class="field">
+        <span class="field-label">ตัวเลือกคะแนนของแต่ละข้อ</span>
+        <div class="seg" id="eScaleSeg">
+          <button type="button" data-v="1-5-na">1–5 และ N/A</button>
+          <button type="button" data-v="1-5">1–5 ไม่มี N/A</button>
+          <button type="button" data-v="yesno">ผ่าน / ไม่ผ่าน</button>
+        </div>
+        <p class="sub" style="margin:8px 0 0;font-size:13px">N/A คือ “ยังไม่มีโอกาสประเมิน” — ข้อที่ตอบ N/A จะไม่ถูกนำมาคิดคะแนน</p>
+      </div>
+
+      <div class="field">
+        <span class="field-label">เกณฑ์ผ่าน</span>
+        <div class="seg" id="ePassMode">
+          <button type="button" data-v="one">เกณฑ์เดียวทุกคน</button>
+          <button type="button" data-v="level">แยกตาม Silver / Gold</button>
+        </div>
+        <div class="pass-rows" id="ePassOne">
+          <label class="inline">ผ่านที่ <input type="number" id="ePassAll" min="0" max="100" value="${passOne(f)}"> %</label>
+        </div>
+        <div class="pass-rows" id="ePassLevel">
+          <label class="inline">Silver ผ่านที่ <input type="number" id="ePassSilver" min="0" max="100" value="${passOf(f,'silver')}"> %</label>
+          <label class="inline">Gold ผ่านที่ <input type="number" id="ePassGold" min="0" max="100" value="${passOf(f,'gold')}"> %</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">เงื่อนไขตกทันที</span>
+        <p class="sub" style="margin:0 0 10px;font-size:13px">ถึงคะแนนรวมจะผ่านเกณฑ์ ถ้าเข้าเงื่อนไขข้อใดข้อหนึ่งนี้ก็ถือว่าไม่ผ่าน</p>
+        <div id="eKoList"></div>
+        <button class="btn btn-secondary btn-sm" onclick="addKo()" style="margin-top:9px">+ เพิ่มเงื่อนไข</button>
+      </div>
+
+      <div class="field">
+        <span class="field-label">ฟอร์มนี้ประเมินใคร</span>
+        <label class="inline"><input type="checkbox" id="eSubReq" ${f.subject_required?'checked':''}> ต้องเลือกชื่อคนที่ถูกประเมิน</label>
+        <p class="sub" style="margin:6px 0 10px;font-size:13px">ไม่ติ๊ก = แบบสำรวจทั่วไป หนึ่งคนตอบได้หนึ่งครั้ง ไม่ต้องเลือกชื่อใคร</p>
+        <div id="eFilterBox">
+          <span class="field-label" style="font-size:13px;font-weight:600">คัดเฉพาะคนที่มีคุณสมบัตินี้ (ไม่ติ๊กเลย = ทุกคนในรายชื่อ)</span>
+          <div class="chk-row">
+            <label class="inline"><input type="checkbox" class="fLv" value="silver" ${hasF(f,'level','silver')?'checked':''}> Silver</label>
+            <label class="inline"><input type="checkbox" class="fLv" value="gold" ${hasF(f,'level','gold')?'checked':''}> Gold</label>
+            <label class="inline"><input type="checkbox" class="fSt" value="service" ${hasF(f,'station','service')?'checked':''}> บริการ</label>
+            <label class="inline"><input type="checkbox" class="fSt" value="kitchen" ${hasF(f,'station','kitchen')?'checked':''}> ครัว</label>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -1571,6 +1733,13 @@ function renderEditor(){
         <button class="btn btn-secondary" onclick="cancelEdit()">ยกเลิก</button>
       </div>
     </div>`;
+
+  segSet('eScaleSeg', scaleKind(f));
+  segSet('ePassMode', passMode(f), syncEditorParts);
+  const req = $('#eSubReq');
+  if (req) req.onchange = syncEditorParts;
+  renderKoList();
+  syncEditorParts();
 }
 
 function secEditHtml(s, i){
@@ -1581,10 +1750,19 @@ function secEditHtml(s, i){
       <div><label>น้ำหนัก %</label><input type="number" min="0" max="100" value="${s.w||0}" oninput="setSec(${i},'w',+this.value)"></div>
       <div><button class="btn btn-danger btn-sm" onclick="delSection(${i})">ลบหมวด</button></div>
     </div>
-    <div class="field" style="margin-bottom:11px">
-      <label>ใช้กับใคร (เว้นว่าง = ทุกคน)</label>
-      <input value="${esc(JSON.stringify(s.when||{}))}" oninput="setSecWhen(${i},this.value)"
-             placeholder='{"level":"silver","station":"service"}'>
+    <div class="when-row">
+      <div><label>หมวดนี้ใช้กับระดับ</label>
+        <select onchange="setWhenPart(${i},'level',this.value)">
+          <option value="" ${!(s.when||{}).level?'selected':''}>ทุกระดับ</option>
+          <option value="silver" ${(s.when||{}).level==='silver'?'selected':''}>Silver</option>
+          <option value="gold" ${(s.when||{}).level==='gold'?'selected':''}>Gold</option>
+        </select></div>
+      <div><label>และหน้างาน</label>
+        <select onchange="setWhenPart(${i},'station',this.value)">
+          <option value="" ${!(s.when||{}).station?'selected':''}>ทุกหน้างาน</option>
+          <option value="service" ${(s.when||{}).station==='service'?'selected':''}>บริการ</option>
+          <option value="kitchen" ${(s.when||{}).station==='kitchen'?'selected':''}>ครัว</option>
+        </select></div>
     </div>
     ${(s.q||[]).map((t,j)=>`<div class="q-edit">
       <span class="qi">${j+1}.</span>
@@ -1648,11 +1826,26 @@ window.saveForm = async function(){
   if (!f.key || !/^[a-z0-9-]+$/.test(f.key))
     return msg('รหัสฟอร์มต้องเป็นภาษาอังกฤษพิมพ์เล็ก ตัวเลข หรือขีดกลางเท่านั้น', 'err');
 
-  try{
-    f.scale = JSON.parse($('#eScale').value || '[]');
-    f.rules = JSON.parse($('#eRules').value || '{}');
-    f.subject_filter = JSON.parse($('#eFilter').value || '{}');
-  }catch(e){ return msg('JSON ไม่ถูกต้อง — ' + esc(e.message), 'err'); }
+  const kind = segGet('eScaleSeg');
+  f.scale = kind === 'yesno' ? clone(SCALE_YESNO)
+          : kind === '1-5'   ? clone(SCALE_1_5).filter(o => o.v !== 'na')
+                             : clone(SCALE_1_5);
+
+  const kos = koList();
+  if (segGet('ePassMode') === 'level'){
+    const sv = +$('#ePassSilver').value || 70, gd = +$('#ePassGold').value || 80;
+    f.rules = { pass:{ by:'level', map:{ silver:sv, gold:gd }, default:sv }, knockouts:kos };
+  } else {
+    f.rules = { pass:{ default:+$('#ePassAll').value || 70 }, knockouts:kos };
+  }
+
+  const pick = sel => [...document.querySelectorAll(sel + ':checked')].map(x => x.value);
+  const lv = pick('.fLv'), st = pick('.fSt');
+  f.subject_filter = {};
+  if (f.subject_required){
+    if (lv.length) f.subject_filter.level = lv;
+    if (st.length) f.subject_filter.station = st;
+  }
 
   /* รหัสหมวดต้องไม่ซ้ำ ไม่งั้นคำตอบจะทับกันเงียบ ๆ */
   const sids = f.sections.map(s => s.sid);
