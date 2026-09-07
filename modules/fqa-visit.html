@@ -5271,19 +5271,168 @@ const IO = {
       'ตรวจแล้ว (%)': by[m].n ? Math.round(by[m].done/by[m].n*100) : 0
     }));
   },
+  /* ไลบรารีที่ลงสีได้ — SheetJS ตัวฟรีเขียนสไตล์ไม่ได้ ได้แต่ค่ากับความกว้าง
+     ไฟล์แผนเป็นของที่เอาขึ้นจอในที่ประชุม เลยต้องอ่านออกตั้งแต่เปิด
+     โหลดเฉพาะตอนกดส่งออก ไม่ถ่วงเวลาเปิดหน้า */
+  xlLib(){ return new Promise((res,rej)=>{
+    if(window.ExcelJS) return res(window.ExcelJS);
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    s.onload=()=>res(window.ExcelJS);
+    s.onerror=()=>rej(new Error('โหลดไลบรารี Excel ไม่สำเร็จ — ต้องเชื่อมต่ออินเทอร์เน็ตครั้งแรก'));
+    document.head.appendChild(s); }); },
+
+  _argb(hex){ return 'FF' + String(hex||'#333333').replace('#','').toUpperCase(); },
+  /* ป้ายบอกว่าไฟล์นี้กรองอะไรมา — คนเปิดไฟล์ทีหลังไม่มีทางรู้ถ้าไม่เขียนไว้ */
+  _planScope(){
+    const a=[];
+    if(Plan.fMonth) a.push(mLabel(Plan.fMonth)); else a.push('ทุกเดือน');
+    if(Plan.fType)  a.push(PLAN_TYPE[Plan.fType]||Plan.fType); else a.push('ทุกประเภท');
+    return a.join(' · ');
+  },
+
   exportPlanXlsx(list){
     list = list || plans();
     if(!list.length) return App.toast('ยังไม่มีแผนให้ส่งออก');
-    this.lib().then(XLSX=>{
-      const rows=this.planRows(list), sum=this.planSummary(rows);
-      const wb=XLSX.utils.book_new();
-      const add=(name,arr)=>{ if(!arr.length) return;
-        const ws=XLSX.utils.json_to_sheet(arr);
-        ws['!cols']=Object.keys(arr[0]).map(k=>({wch:Math.min(46,Math.max(10,k.length+6))}));
-        XLSX.utils.book_append_sheet(wb,ws,name); };
-      add('แผนการตรวจสาขา',rows); add('สรุปรายเดือน',sum);
-      XLSX.writeFile(wb,`แผนการตรวจสาขา_${this.bTag()}_${this.stamp()}.xlsx`);
-      App.toast('ส่งออกแผน '+rows.length+' รายการแล้ว');
+
+    const rows=this.planRows(list), sum=this.planSummary(rows);
+    const AC=this._argb((Brand.info().theme||{}).accent||'#D6142B');
+    const INK='FF1F2430', SUB='FF6B7280', LINE='FFE3E6EB', ZEBRA='FFF7F8FA', WHITE='FFFFFFFF';
+    const STATE={
+      'ตรวจแล้ว'  :{bg:'FFE7F6EC', fg:'FF1B7F3B'},
+      'เกินกำหนด':{bg:'FFFDEAEA', fg:'FFB42318'},
+      'รอตรวจ'   :{bg:'FFFFF4E5', fg:'FF9A6300'}
+    };
+    const thin={style:'thin',color:{argb:LINE}};
+    const box={top:thin,left:thin,bottom:thin,right:thin};
+
+    this.xlLib().then(ExcelJS=>{
+      const wb=new ExcelJS.Workbook();
+      wb.creator='FAB Operations Hub';
+      wb.created=new Date();
+
+      /* ---------- หัวเรื่องสองบรรทัดบนสุด ใช้ร่วมกันทั้งสองแผ่น ---------- */
+      const titleBlock=(ws,title,note,ncol)=>{
+        ws.mergeCells(1,1,1,ncol);
+        const t=ws.getCell(1,1);
+        t.value=title;
+        t.font={name:'Tahoma',size:15,bold:true,color:{argb:AC}};
+        t.alignment={vertical:'middle'};
+        ws.getRow(1).height=26;
+        ws.mergeCells(2,1,2,ncol);
+        const n=ws.getCell(2,1);
+        n.value=note;
+        n.font={name:'Tahoma',size:10,color:{argb:SUB}};
+        n.alignment={vertical:'middle'};
+        ws.getRow(2).height=18;
+        ws.getRow(3).height=6;
+      };
+      const headRow=(ws,cols,r)=>{
+        const row=ws.getRow(r);
+        cols.forEach((c,k)=>{
+          const cell=row.getCell(k+1);
+          cell.value=c;
+          cell.font={name:'Tahoma',size:10.5,bold:true,color:{argb:WHITE}};
+          cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:AC}};
+          cell.alignment={vertical:'middle',horizontal:'center',wrapText:true};
+          cell.border=box;
+        });
+        row.height=24;
+        return row;
+      };
+
+      /* ---------- แผ่นที่ 1: รายบรรทัด ---------- */
+      const ws=wb.addWorksheet('แผนการตรวจสาขา',{views:[{state:'frozen',ySplit:4}]});
+      const cols=Object.keys(rows[0]);
+      titleBlock(ws,'แผนการตรวจสาขา · '+Brand.info().name,
+        this._planScope()+'  ·  '+rows.length+' รายการ  ·  ออกไฟล์ '+dLabel(todayISO()),cols.length);
+      headRow(ws,cols,4);
+
+      const iDate=cols.indexOf('วันที่นัดตรวจ'), iOn=cols.indexOf('ตรวจจริงเมื่อ'), iSt=cols.indexOf('สถานะ');
+      rows.forEach((r,n)=>{
+        const row=ws.getRow(5+n);
+        cols.forEach((c,k)=>{
+          const cell=row.getCell(k+1);
+          const v=r[c];
+          /* วันที่เก็บเป็นวันที่จริง ไม่ใช่ข้อความ — คนเปิดไฟล์จะได้เรียงและกรองช่วงวันได้
+             ซึ่งเป็นเหตุผลหลักที่ขอเป็น Excel ไม่ใช่ภาพหน้าจอ */
+          if((k===iDate||k===iOn) && v){
+            cell.value=new Date(v+'T00:00:00');
+            cell.numFmt='dd/mm/yyyy';
+          } else cell.value=v;
+          cell.font={name:'Tahoma',size:10,color:{argb:INK}};
+          cell.alignment={vertical:'middle',horizontal:(k===0||k===iDate||k===iOn)?'center':'left',wrapText:false};
+          cell.border=box;
+          if(n%2===1) cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:ZEBRA}};
+        });
+        /* สถานะลงสี — คำถามเดียวที่คนเปิดไฟล์นี้อยากรู้ ต้องเห็นโดยไม่ต้องอ่าน */
+        const st=STATE[r[cols[iSt]]];
+        if(st){
+          const c=row.getCell(iSt+1);
+          c.fill={type:'pattern',pattern:'solid',fgColor:{argb:st.bg}};
+          c.font={name:'Tahoma',size:10,bold:true,color:{argb:st.fg}};
+          c.alignment={vertical:'middle',horizontal:'center'};
+        }
+        row.height=19;
+      });
+
+      const W={'ลำดับ':6,'วันที่นัดตรวจ':13,'วัน':10,'เดือน':16,'ประเภทการตรวจ':15,
+        'สาขา':32,'ผู้จัดการเขต':16,'ผู้ตรวจ':18,'สถานะ':12,'ตรวจจริงเมื่อ':13,
+        'เลขที่ใบตรวจ':16,'บันทึกแผนเมื่อ':19};
+      cols.forEach((c,k)=>{ ws.getColumn(k+1).width=W[c]||14; });
+      ws.autoFilter={from:{row:4,column:1},to:{row:4+rows.length,column:cols.length}};
+
+      /* ---------- แผ่นที่ 2: สรุปรายเดือน ---------- */
+      const ws2=wb.addWorksheet('สรุปรายเดือน',{views:[{state:'frozen',ySplit:4}]});
+      const c2=Object.keys(sum[0]);
+      titleBlock(ws2,'สรุปแผนรายเดือน · '+Brand.info().name,
+        'นัดไว้กี่ครั้ง ไปแล้วกี่ครั้ง  ·  '+this._planScope(),c2.length);
+      headRow(ws2,c2,4);
+
+      const iPct=c2.indexOf('ตรวจแล้ว (%)');
+      sum.forEach((r,n)=>{
+        const row=ws2.getRow(5+n);
+        c2.forEach((c,k)=>{
+          const cell=row.getCell(k+1);
+          cell.value=r[c];
+          cell.font={name:'Tahoma',size:10.5,color:{argb:INK}};
+          cell.alignment={vertical:'middle',horizontal:k===0?'left':'center'};
+          cell.border=box;
+          if(n%2===1) cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:ZEBRA}};
+        });
+        /* ไล่สีตามเปอร์เซ็นต์ — เดือนที่หลุดเป้าต้องสะดุดตาก่อนตัวเลข */
+        const pc=Number(r[c2[iPct]])||0;
+        const tone = pc>=80? STATE['ตรวจแล้ว'] : pc>=50? STATE['รอตรวจ'] : STATE['เกินกำหนด'];
+        const cell=row.getCell(iPct+1);
+        cell.numFmt='0"%"';
+        cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:tone.bg}};
+        cell.font={name:'Tahoma',size:10.5,bold:true,color:{argb:tone.fg}};
+        row.height=20;
+      });
+
+      /* แถวรวม — ตัวเลขที่คนถามถึงบ่อยที่สุดไม่ควรต้องกดบวกเอง */
+      const tr=ws2.getRow(5+sum.length);
+      const tot=sum.reduce((a,r)=>({n:a.n+r['แผนทั้งหมด'],d:a.d+r['ตรวจแล้ว'],
+        o:a.o+r['เกินกำหนด'],u:a.u+r['รอตรวจ']}),{n:0,d:0,o:0,u:0});
+      [['รวมทุกเดือน',tot.n,tot.d,tot.o,tot.u,tot.n?Math.round(tot.d/tot.n*100):0]][0]
+        .forEach((v,k)=>{
+          const cell=tr.getCell(k+1);
+          cell.value=v;
+          if(k===5) cell.numFmt='0"%"';
+          cell.font={name:'Tahoma',size:10.5,bold:true,color:{argb:WHITE}};
+          cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:AC}};
+          cell.alignment={vertical:'middle',horizontal:k===0?'left':'center'};
+          cell.border=box;
+        });
+      tr.height=22;
+      const W2={'เดือน':20,'แผนทั้งหมด':13,'ตรวจแล้ว':12,'เกินกำหนด':13,'รอตรวจ':11,'ตรวจแล้ว (%)':14};
+      c2.forEach((c,k)=>{ ws2.getColumn(k+1).width=W2[c]||14; });
+
+      return wb.xlsx.writeBuffer().then(buf=>{
+        this.dl(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
+          `แผนการตรวจสาขา_${this.bTag()}_${this.stamp()}.xlsx`);
+        App.toast('ส่งออกแผน '+rows.length+' รายการแล้ว');
+      });
     }).catch(e=>App.toast(e.message));
   },
   exportCsv(rows){
