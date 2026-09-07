@@ -147,30 +147,66 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml;charset=utf8
 .dsec .dsec-link{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--accent);cursor:pointer;white-space:nowrap}
 .dsec .dsec-link:hover{text-decoration:underline}
 /* ── Store Training Audit (STA) ── */
-.sta-sum{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline;
-  padding:11px 14px;border:1px solid var(--border);border-radius:11px;background:var(--surface);margin-bottom:14px}
-.sta-sum b{font-size:20px;letter-spacing:-.4px}
-.sta-sum .pc{font-size:26px;font-weight:800;color:var(--accent)}
-.sta-sum .lbl{font-size:11.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
-.sta-item{border-top:1px solid var(--border);padding:13px 0}
-.sta-item:first-child{border-top:0}
-.sta-q{font-size:13.5px;font-weight:700;line-height:1.5;margin:0 0 2px}
-.sta-q .no{color:var(--accent);margin-right:6px}
-.sta-part{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:9px}
-.sta-part .who{min-width:118px;font-size:12.5px;font-weight:600;color:var(--text2)}
-.sta-part .max{font-size:11.5px;color:var(--text3);min-width:44px}
-.sta-part .note{flex:1;min-width:150px}
-.sta-part .note input{width:100%;border:1px solid var(--border);border-radius:8px;padding:7px 10px;
-  font-family:inherit;font-size:12.5px;background:var(--surface);color:var(--text)}
-.sta-mk{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden}
-.sta-mk button{border:0;background:var(--surface);color:var(--text2);font-family:inherit;font-size:12px;
-  font-weight:700;padding:7px 12px;cursor:pointer;border-left:1px solid var(--border)}
+/* แถบคะแนนติดบนสุด — ตัวเลขที่คนตรวจมองบ่อยที่สุดต้องอยู่ในสายตาตลอด
+   ไม่ใช่ต้องเลื่อนขึ้นไปดูทุกครั้งที่อยากรู้ว่าตอนนี้ได้เท่าไร */
+.sta-bar{position:sticky;top:8px;z-index:6;margin:0 0 16px;padding:14px 16px;border-radius:14px;
+  border:1px solid var(--border);background:var(--surface);box-shadow:0 8px 22px rgba(15,23,42,.07)}
+.sta-bar .row{display:flex;align-items:flex-end;gap:6px 20px;flex-wrap:wrap}
+.sta-bar .pc{font-size:32px;font-weight:800;letter-spacing:-1.2px;line-height:.95;color:var(--accent)}
+.sta-bar .sc{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.sta-bar .sc small{font-size:12.5px;font-weight:600;color:var(--text3)}
+.sta-bar .rt{margin-left:auto;text-align:right}
+.sta-lbl{display:block;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--text3);font-weight:800;margin-bottom:3px}
+.sta-track{margin-top:12px;height:6px;border-radius:99px;background:var(--border);overflow:hidden}
+.sta-track i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .2s ease}
+.sta-left{font-size:11.5px;color:var(--text3);margin-top:7px}
+.sta-left b{color:var(--accent-hover,var(--accent))}
+.sta-done{color:#0E9F6E;font-weight:700}
+
+/* หนึ่งข้อ = หัวข้อ + แถวให้คะแนนของแต่ละส่วนงาน */
+.sta-item{border-top:1px solid var(--border);padding:15px 0 13px}
+.sta-item:first-child{border-top:0;padding-top:3px}
+.sta-head{display:flex;gap:10px;align-items:flex-start}
+.sta-no{flex:none;min-width:32px;height:23px;padding:0 7px;border-radius:7px;
+  background:color-mix(in srgb, var(--accent) 12%, transparent);color:var(--accent);
+  font-size:11.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;letter-spacing:.2px}
+.sta-q{margin:1px 0 0;font-size:13.5px;font-weight:700;line-height:1.55;flex:1}
+.sta-sub{margin:6px 0 0 42px;padding:0 0 0 15px;font-size:12px;color:var(--text3);line-height:1.75}
+.sta-quick{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--text2);
+  font-family:inherit;font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.sta-quick:hover{border-color:#0E9F6E;color:#0E9F6E}
+
+.sta-rows{margin:10px 0 0 42px;border:1px solid var(--border);border-radius:11px;overflow:hidden}
+.sta-row{display:flex;flex-wrap:wrap;gap:9px;align-items:center;padding:9px 11px;border-top:1px solid var(--border)}
+.sta-row:first-child{border-top:0}
+.sta-row.z{background:color-mix(in srgb, var(--text) 2.5%, transparent)}
+.sta-row .who{min-width:104px;font-size:12.5px;font-weight:700;color:var(--text2)}
+.sta-row .max{min-width:34px;font-size:11.5px;font-weight:700;color:var(--text3);text-align:right}
+.sta-row .note{flex:1;min-width:140px}
+.sta-row .note input{width:100%;border:0;border-bottom:1px dashed var(--border);border-radius:0;
+  padding:5px 2px;font-family:inherit;font-size:12.5px;background:transparent;color:var(--text)}
+.sta-row .note input:focus{outline:0;border-bottom-color:var(--accent)}
+.sta-row .note input::placeholder{color:var(--text3);opacity:.8}
+
+/* ปุ่มสามทาง — สีเข้มเฉพาะตัวที่เลือก ที่เหลือเงียบไว้ ไม่แย่งสายตา */
+.sta-mk{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;flex:none}
+.sta-mk button{border:0;background:var(--surface);color:var(--text3);font-family:inherit;font-size:12px;
+  font-weight:700;padding:6px 11px;cursor:pointer;border-left:1px solid var(--border);transition:background .12s}
 .sta-mk button:first-child{border-left:0}
+.sta-mk button:hover{background:color-mix(in srgb, var(--text) 5%, transparent)}
 .sta-mk button.on-pass{background:#0E9F6E;color:#fff}
 .sta-mk button.on-fail{background:#D6142B;color:#fff}
 .sta-mk button.on-na{background:#6B7280;color:#fff}
-.sta-na{font-size:11.5px;color:var(--text3);font-style:italic}
-@media(max-width:640px){.sta-part .who{min-width:100%}.sta-sum{gap:8px 14px}}
+.sta-naz{font-size:11.5px;color:var(--text3);font-style:italic;flex:none}
+
+@media(max-width:640px){
+  .sta-bar{padding:12px 13px}.sta-bar .pc{font-size:27px}
+  .sta-rows{margin-left:0}.sta-sub{margin-left:0}
+  .sta-row{gap:7px}.sta-row .who{min-width:100%;margin-bottom:-2px}
+  .sta-row .note{min-width:100%}
+  .sta-mk button{padding:7px 13px}
+}
 /* ปฏิทินแผนการตรวจ */
 .cal-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .cal-head b{font-size:15px;font-weight:800;min-width:96px;text-align:center}
@@ -3253,14 +3289,16 @@ const Form = {
     if(!s.notes) s.notes={};
     if(!Array.isArray(s.verify)) s.verify=STA_VERIFY_GROUPS.map(g=>this.verifyRow(g));
     const sc=staScore(s);
-
-    /* แถบคะแนนติดบนสุด — ผู้ตรวจเห็นตัวเลขขยับทันทีที่กด ไม่ต้องเลื่อนไปดูท้ายใบ */
-    const head=`<div class="sta-sum">
-      <div><div class="lbl">คะแนนที่ได้</div><b>${staNum(sc.got)}</b> <span style="color:var(--text3)">/ ${staNum(sc.total||sc.full)}</span></div>
-      <div><div class="lbl">คิดเป็น</div><span class="pc">${staNum(sc.pct)}%</span></div>
-      <div class="sp" style="flex:1"></div>
-      <div style="text-align:right"><div class="lbl">ตอบแล้ว</div><b style="font-size:15px">${sc.done}/${sc.all}</b>
-        ${sc.done<sc.all?`<div class="sta-na">ยังไม่ครบ ${sc.all-sc.done} ช่อง</div>`:`<div class="sta-na" style="color:#0E9F6E">ครบแล้ว</div>`}</div>
+    const bar=`<div class="sta-bar">
+      <div class="row">
+        <div><span class="sta-lbl">คิดเป็น</span><span class="pc">${staNum(sc.pct)}%</span></div>
+        <div><span class="sta-lbl">คะแนน</span><span class="sc">${staNum(sc.got)}<small> / ${staNum(sc.total||sc.full)}</small></span></div>
+        <div class="rt"><span class="sta-lbl">ตอบแล้ว</span><span class="sc">${sc.done}<small> / ${sc.all}</small></span></div>
+      </div>
+      <div class="sta-track"><i style="width:${sc.all? Math.round(sc.done/sc.all*100):0}%"></i></div>
+      <div class="sta-left">${sc.done<sc.all
+        ? `เหลืออีก <b>${sc.all-sc.done}</b> ช่อง · คะแนนที่เห็นคิดจากข้อที่ตอบแล้วเท่านั้น`
+        : `<span class="sta-done">ตอบครบทุกข้อแล้ว</span> · เต็ม ${staNum(sc.full)} คะแนน`}</div>
     </div>`;
 
     const mk=(no,k,cur)=>{
@@ -3270,31 +3308,38 @@ const Form = {
 
     const secs=STA_FORM.map((sec,si)=>{
       const ss=staSectionScore(s,sec);
-      const items=sec.items.map(it=>`
-        <div class="sta-item">
-          <p class="sta-q"><span class="no">${it.no}</span>${esc(it.text)}
-            ${it.tag?`<span class="tag" style="margin-left:6px">${esc(it.tag)}</span>`:''}</p>
-          ${it.sub?`<ul style="margin:4px 0 0 18px;padding:0;font-size:12px;color:var(--text3);line-height:1.7">${it.sub.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
-          ${it.parts.map(p=>{
+      let ansN=0, allN=0;
+      sec.items.forEach(it=>it.parts.forEach(p=>{ if(p.na) return; allN++; if(s.marks[it.no+'.'+p.k]) ansN++; }));
+      const items=sec.items.map(it=>{
+        const scored=it.parts.filter(p=>!p.na);
+        return `<div class="sta-item">
+          <div class="sta-head">
+            <span class="sta-no">${esc(it.no)}</span>
+            <p class="sta-q">${esc(it.text)}${it.tag?` <span class="tag">${esc(it.tag)}</span>`:''}</p>
+            ${scored.length>1?`<button class="sta-quick" onclick="Form.staPassAll('${it.no}')">ผ่านทั้งข้อ</button>`:''}
+          </div>
+          ${it.sub?`<ul class="sta-sub">${it.sub.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+          <div class="sta-rows">
+          ${it.parts.map((p,pi)=>{
             const key=it.no+'.'+p.k;
-            if(p.na) return `<div class="sta-part"><span class="who">${esc(p.who||'')}</span>
-              <span class="sta-na">ไม่คิดคะแนน (N/A ตามเกณฑ์)</span>
-              <span class="note"><input placeholder="${attr(p.hint||'บันทึกเพิ่มเติม')}" value="${attr(s.notes[key]||'')}" oninput="Form.staNote('${key}',this.value)"></span></div>`;
-            return `<div class="sta-part">
+            const note=`<span class="note"><input placeholder="${attr(p.hint||'บันทึกเพิ่มเติม')}" value="${attr(s.notes[key]||'')}" oninput="Form.staNote('${key}',this.value)"></span>`;
+            if(p.na) return `<div class="sta-row${pi%2?' z':''}"><span class="who">${esc(p.who||'')}</span>
+              <span class="sta-naz">ไม่คิดคะแนน (N/A ตามเกณฑ์)</span>${note}</div>`;
+            return `<div class="sta-row${pi%2?' z':''}">
               <span class="who">${esc(p.who||'ผลการตรวจ')}</span>
-              <span class="max">${staNum(p.max)} คะแนน</span>
-              ${mk(it.no,p.k,s.marks[key])}
-              <span class="note"><input placeholder="${attr(p.hint||'บันทึกเพิ่มเติม')}" value="${attr(s.notes[key]||'')}" oninput="Form.staNote('${key}',this.value)"></span>
-            </div>`;
+              <span class="max">${staNum(p.max)}</span>
+              ${mk(it.no,p.k,s.marks[key])}${note}</div>`;
           }).join('')}
-        </div>`).join('');
+          </div>
+        </div>`;
+      }).join('');
       return `<div class="card">
         <div class="hd"><span class="sec-no">${si+2}</span><h3>${esc(sec.name)}</h3><div class="sp"></div>
-          <span class="note">${esc(sec.group)} · ได้ ${staNum(ss.got)}/${staNum(ss.full)}</span></div>
+          <span class="note">${esc(sec.group)} · ตอบแล้ว ${ansN}/${allN} · ได้ ${staNum(ss.got)}/${staNum(ss.full)}</span></div>
         <div class="bd">${items}</div></div>`;
     }).join('');
 
-    return head + secs + this.verifyCard(STA_FORM.length+2) + `
+    return bar + secs + this.verifyCard(STA_FORM.length+2) + `
     <div class="card">
       <div class="hd"><span class="sec-no">${STA_FORM.length+3}</span><h3>สรุปของผู้ตรวจ</h3></div>
       <div class="bd"><div class="fld"><label class="lbl">ความเห็นและข้อแนะนำโดยรวม</label>
@@ -3302,6 +3347,14 @@ const Form = {
     </div>` + this.photoBlock(STA_FORM.length+4, 'รูปแนบเพิ่มเติม (ประกอบการตรวจ)');
   },
 
+  /* ปุ่มลัด — ข้อที่แยกสามส่วนงานและผ่านหมด กดทีเดียวจบ
+     ผู้ตรวจส่วนใหญ่เจอผ่านมากกว่าไม่ผ่าน การกดทีละช่องจึงเสียเวลาโดยไม่จำเป็น */
+  staPassAll(no){
+    const it=STA_FORM.reduce((f,sec)=>f||sec.items.find(x=>x.no===no),null);
+    if(!it) return;
+    it.parts.forEach(p=>{ if(!p.na) this.s.marks[no+'.'+p.k]='pass'; });
+    this.persist(); this.render();
+  },
   staMark(key, val){
     /* กดซ้ำที่เดิม = ยกเลิกคำตอบ — เผลอกดผิดแล้วแก้ได้โดยไม่ต้องเลือกอย่างอื่นไปก่อน */
     if(this.s.marks[key]===val) delete this.s.marks[key]; else this.s.marks[key]=val;
@@ -4503,9 +4556,11 @@ const Dash = {
 /* =======================================================================
    PLAN — ตารางนัดตรวจสาขา (เก็บเป็น record type=PLAN · ซิงค์ผ่าน cloud เดิม)
    ======================================================================= */
-const PLAN_TYPE = {FQA:'FQA', FSQ:'Complaint', VISIT:'Visit', STA:'STA'};
-const PLAN_TYPE_COLOR = {FQA:'#D6142B', FSQ:'#E8820C', VISIT:'#1E63D6', STA:'#0E9F6E'};
-const planType = p => p==='FSQ'?'FSQ':p==='VISIT'?'VISIT':p==='STA'?'STA':'FQA';
+const PLAN_TYPE = {FQA:'FQA', FSQ:'Complaint', VISIT:'Visit'};
+const PLAN_TYPE_COLOR = {FQA:'#D6142B', FSQ:'#E8820C', VISIT:'#1E63D6'};
+/* STA เป็นแบบฟอร์มที่ใช้ตอนเข้า Visit ไม่ใช่การเข้าตรวจคนละรอบ
+   แผนที่บันทึกไว้เป็น STA (ถ้ามี) จึงนับรวมเป็น Visit ไม่แยกหมวดในปฏิทิน */
+const planType = p => p==='FSQ'?'FSQ':(p==='VISIT'||p==='STA')?'VISIT':'FQA';
 const planTypeTag = t => { const k=planType(t), c=PLAN_TYPE_COLOR[k]; return `<span class="tag" style="background:${c}18;color:${c};border:1px solid ${c}55;font-weight:700">${PLAN_TYPE[k]}</span>`; };
 /* ป้ายผู้ตรวจ — แต่ละคนสีต่างกัน (คงที่ต่อชื่อ) เพื่อแยกผู้ตรวจได้ง่ายทั้งคอมและมือถือ */
 const TRAINER_PALETTE = ['#6D28D9','#0E7490','#B45309','#BE185D','#15803D','#1D4ED8','#9333EA','#C2410C','#0F766E','#7C3AED','#A16207','#DB2777'];
@@ -4721,7 +4776,7 @@ const Coverage = {
             <div class="fld"><label class="lbl">นับเฉพาะประเภท</label>
               <select class="inp" onchange="Coverage.setType(this.value)">
                 <option value="">ทุกประเภท</option>
-                ${['FQA','FSQ','VISIT','STA'].filter(t=>Brand.has(t)).map(t => `<option value="${t}"${this.type===t?' selected':''}>${TYPE_LABEL[t]}</option>`).join('')}
+                ${['FQA','FSQ','VISIT'].filter(t=>Brand.has(t)).map(t => `<option value="${t}"${this.type===t?' selected':''}>${TYPE_LABEL[t]}</option>`).join('')}
               </select></div>
             <div class="fld"><label class="lbl">สถานะ</label>
               <select class="inp" onchange="Coverage.setState(this.value)">
@@ -4910,8 +4965,7 @@ const Plan = {
           <option value="">ทุกประเภท</option>
           <option value="FQA" ${this.fType==='FQA'?'selected':''}>FQA</option>
           <option value="FSQ" ${this.fType==='FSQ'?'selected':''}>Complaint</option>
-          <option value="VISIT" ${this.fType==='VISIT'?'selected':''}>Visit</option>
-          <option value="STA" ${this.fType==='STA'?'selected':''}>STA</option></select>
+          <option value="VISIT" ${this.fType==='VISIT'?'selected':''}>Visit</option></select>
       </div>
       <div class="tw">${ list.length
         ? `<table class="tb"><thead><tr><th>วันที่นัด</th><th>ประเภทการตรวจ</th><th>สาขา</th><th>ผู้ตรวจ</th><th></th></tr></thead><tbody>
@@ -5026,7 +5080,9 @@ const Plan = {
   },
   inspect(id){
     const p=DB.all().find(r=>r.id===id); if(!p) return;
-    const view = p.ptype==='FSQ'?'fsq' : p.ptype==='VISIT'?'visit' : p.ptype==='STA'?'sta' : 'fqa';
+    const view = p.ptype==='FSQ'?'fsq'
+      : (p.ptype==='VISIT'||p.ptype==='STA') ? (Brand.has('STA')?'sta':'visit')
+      : 'fqa';
     App.go(view);
     const d=Form.s; d.branch=p.branch; d.bzm=p.bzm||(M.branchOf(p.branch)||{}).bzm||''; if(p.trainer) d.trainer=p.trainer;
     Form.render(); App.toast('เปิดฟอร์ม'+(PLAN_TYPE[p.ptype]||'FQA')+'สำหรับ '+p.branch);
