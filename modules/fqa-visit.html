@@ -4561,6 +4561,11 @@ const PLAN_TYPE_COLOR = {FQA:'#D6142B', FSQ:'#E8820C', VISIT:'#1E63D6'};
 /* STA เป็นแบบฟอร์มที่ใช้ตอนเข้า Visit ไม่ใช่การเข้าตรวจคนละรอบ
    แผนที่บันทึกไว้เป็น STA (ถ้ามี) จึงนับรวมเป็น Visit ไม่แยกหมวดในปฏิทิน */
 const planType = p => p==='FSQ'?'FSQ':(p==='VISIT'||p==='STA')?'VISIT':'FQA';
+function planTypesOfBrand(){
+  const seen = {}, out = [];
+  Brand.info().forms.forEach(function(f){ const t = planType(f); if(!seen[t]){ seen[t] = 1; out.push(t); } });
+  return out;
+}
 const planTypeTag = t => { const k=planType(t), c=PLAN_TYPE_COLOR[k]; return `<span class="tag" style="background:${c}18;color:${c};border:1px solid ${c}55;font-weight:700">${PLAN_TYPE[k]}</span>`; };
 /* ป้ายผู้ตรวจ — แต่ละคนสีต่างกัน (คงที่ต่อชื่อ) เพื่อแยกผู้ตรวจได้ง่ายทั้งคอมและมือถือ */
 const TRAINER_PALETTE = ['#6D28D9','#0E7490','#B45309','#BE185D','#15803D','#1D4ED8','#9333EA','#C2410C','#0F766E','#7C3AED','#A16207','#DB2777'];
@@ -4845,10 +4850,9 @@ const Plan = {
         <div class="kpi nu"><div class="k">แผนทั้งหมด</div><div class="v">${all.length}<small>แผน</small></div></div>
         ${/* แยกยอดตามชนิดฟอร์มเฉพาะฟอร์มที่แบรนด์นี้ใช้จริง
              แบรนด์ที่ใช้ฟอร์มเดียวก็ไม่ต้องแยก เพราะยอดจะเท่ากับ "แผนทั้งหมด" ทุกใบ */
-          Brand.info().forms.length > 1
-          ? [['FQA','FQA','FQA'],['FSQ','Complaint','FSQ'],['VISIT','Visit','VISIT']]
-              .filter(t=>Brand.has(t[0]))
-              .map(t=>`<div class="kpi"><div class="k">${t[1]}</div><div class="v" style="color:${PLAN_TYPE_COLOR[t[2]]}">${bt[t[2]]}</div></div>`)
+          planTypesOfBrand().length > 1
+          ? planTypesOfBrand()
+              .map(t=>`<div class="kpi"><div class="k">${PLAN_TYPE[t]}</div><div class="v" style="color:${PLAN_TYPE_COLOR[t]}">${bt[t]}</div></div>`)
               .join('')
           : ''}
       </div>
@@ -4861,8 +4865,8 @@ const Plan = {
               <select class="inp" onchange="Plan.setBzm(this.value)"><option value="">— ทุกเขต —</option>${zs.map(z=>`<option ${z===this.selBzm?'selected':''}>${esc(z)}</option>`).join('')}</select></div>
             <div class="fld"><label class="lbl">สาขา</label>
               <select class="inp" id="plBranch"><option value="">— เลือกสาขา —</option>${branchList.map(b=>`<option>${esc(b.name)}</option>`).join('')}</select></div>
-            <div class="fld"><label class="lbl">ประเภทการตรวจ</label>
-              <select class="inp" onchange="Plan.pType=this.value">${Object.keys(PLAN_TYPE).filter(t=>Brand.has(t)).map(t=>`<option value="${t}" ${t===this.pType?'selected':''}>${PLAN_TYPE[t]}</option>`).join('')}</select></div>
+            ${planTypesOfBrand().length>1 ? `<div class="fld"><label class="lbl">ประเภทการตรวจ</label>
+              <select class="inp" onchange="Plan.pType=this.value">${planTypesOfBrand().map(t=>`<option value="${t}" ${t===this.pType?'selected':''}>${PLAN_TYPE[t]}</option>`).join('')}</select></div>` : ''}
             <div class="fld"><label class="lbl">วันที่นัดตรวจ</label><input type="date" class="inp" id="plDate" value="${attr(this.pDate)}" onchange="Plan.pDate=this.value"></div>
           </div>
           <div style="margin-top:12px;display:flex;gap:10px;align-items:end;flex-wrap:wrap">
@@ -4942,10 +4946,10 @@ const Plan = {
         <b>${mLabel(ym)}</b>
         <button class="btn sm" onclick="Plan.shiftMonth(1)">›</button>
         <div class="sp" style="flex:1"></div>
-        <span class="lg" style="margin:0"><span><i style="background:${PLAN_TYPE_COLOR.FQA}"></i>FQA</span><span><i style="background:${PLAN_TYPE_COLOR.FSQ}"></i>Complaint</span><span><i style="background:${PLAN_TYPE_COLOR.VISIT}"></i>Visit</span></span>
+        ${planTypesOfBrand().length>1 ? `<span class="lg" style="margin:0">${planTypesOfBrand().map(t=>`<span><i style="background:${PLAN_TYPE_COLOR[t]}"></i>${PLAN_TYPE[t]}</span>`).join('')}</span>` : ''}
       </div>
       <div class="cal-grid">${cells}</div>
-      <p class="hint">แตะช่องวันเพื่อเพิ่มแผนวันนั้น · แตะรายการเพื่อเปิดฟอร์มตรวจ · สีแยกตามประเภทการตรวจ</p>`;
+      <p class="hint">แตะช่องวันเพื่อเพิ่มแผนวันนั้น · แตะรายการเพื่อเปิดฟอร์มตรวจ${planTypesOfBrand().length>1?' · สีแยกตามประเภทการตรวจ':''}</p>`;
   },
   shiftMonth(n){ let [y,mo]=this.calMonth.split('-').map(Number); let idx=(mo-1)+n; y+=Math.floor(idx/12); idx=((idx%12)+12)%12; this.calMonth=y+'-'+String(idx+1).padStart(2,'0'); this.render(); },
   dayAdd(iso){ this.pDate=iso; const el=document.getElementById('plDate'); if(el) el.value=iso; App.toast('ตั้งวันที่นัด '+iso+' — เลือกสาขาแล้วกดเพิ่มแผน'); window.scrollTo({top:0,behavior:'smooth'}); },
@@ -4958,20 +4962,19 @@ const Plan = {
     if(this.fType)  list=list.filter(p=>planType(p.ptype)===this.fType);
     const dowTH=['อา','จ','อ','พ','พฤ','ศ','ส'];
     const dow=iso=>{ try{ return dowTH[new Date(iso+'T00:00:00').getDay()]; }catch(e){ return ''; } };
+    const multi=planTypesOfBrand().length>1;   /* แบรนด์ที่มีหมวดเดียว ไม่ต้องมีคอลัมน์ประเภท */
     return `<div style="padding:12px 14px;display:flex;gap:9px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
         <select class="inp" style="width:auto;min-width:120px" onchange="Plan.setFilter('fMonth',this.value)">
           <option value="">ทุกเดือน</option>${months.map(m=>`<option value="${m}" ${m===this.fMonth?'selected':''}>${mLabel(m)}</option>`).join('')}</select>
-        <select class="inp" style="width:auto;min-width:120px" onchange="Plan.setFilter('fType',this.value)">
+        ${planTypesOfBrand().length>1 ? `<select class="inp" style="width:auto;min-width:120px" onchange="Plan.setFilter('fType',this.value)">
           <option value="">ทุกประเภท</option>
-          <option value="FQA" ${this.fType==='FQA'?'selected':''}>FQA</option>
-          <option value="FSQ" ${this.fType==='FSQ'?'selected':''}>Complaint</option>
-          <option value="VISIT" ${this.fType==='VISIT'?'selected':''}>Visit</option></select>
+          ${planTypesOfBrand().map(t=>`<option value="${t}" ${this.fType===t?'selected':''}>${PLAN_TYPE[t]}</option>`).join('')}</select>` : ''}
       </div>
       <div class="tw">${ list.length
-        ? `<table class="tb"><thead><tr><th>วันที่นัด</th><th>ประเภทการตรวจ</th><th>สาขา</th><th>ผู้ตรวจ</th><th></th></tr></thead><tbody>
+        ? `<table class="tb"><thead><tr><th>วันที่นัด</th>${multi?'<th>ประเภทการตรวจ</th>':''}<th>สาขา</th><th>ผู้ตรวจ</th><th></th></tr></thead><tbody>
           ${list.map(p=>`<tr>
             <td style="white-space:nowrap">${dLabel(p.date)}<div style="font-size:11px;color:var(--text3)">${dow(p.date)}</div></td>
-            <td>${planTypeTag(p.ptype)}</td>
+            ${multi?`<td>${planTypeTag(p.ptype)}</td>`:''}
             <td>${esc(p.branch)}<div style="font-size:11px;color:var(--text3)">${esc(p.bzm||'')}</div></td>
             <td style="font-size:13px;font-weight:600">${esc(p.trainer||'—')}</td>
             <td class="rowact noprint">
