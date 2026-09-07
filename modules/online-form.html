@@ -275,7 +275,10 @@ summary{font-weight:700;cursor:pointer}
 
 <div class="modal" id="modal"><div class="modal-box" id="modalBox"></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
+<!-- ตรึงเวอร์ชันไว้ที่ 2.53.0 — ของเดิมตรึงไว้ที่ 2.39.7 ซึ่งยังไม่มี signInAnonymously
+     (เพิ่มเข้ามาตอน 2.43) ทำให้ล็อกอินไม่ผ่านทั้งที่เปิดใช้ในโปรเจกต์แล้ว
+     ยังตรึงเวอร์ชันอยู่ ไม่ใช้ @2 ลอย ๆ เพราะไลบรารีอัปเองแล้วหน้าพังจะหาสาเหตุยาก -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.53.0/dist/umd/supabase.js"></script>
 <script>
 /* ══════════════════════════════════════════════════════════════════
    ระบบแบบฟอร์มออนไลน์ — โมดูลของ FAB Operations Hub
