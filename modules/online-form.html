@@ -77,14 +77,24 @@ label{font-weight:700;font-size:14px;display:block;margin-bottom:6px}
 .list-head h2{margin:0 0 3px}
 .list-head .sub{margin:0}
 .form-rows{display:flex;flex-direction:column;gap:11px}
-.form-row{
+.form-item{
   background:#fff;border:1px solid var(--line);border-radius:16px;
-  box-shadow:var(--shadow);padding:18px 20px;
-  display:flex;align-items:center;gap:16px;transition:.16s ease;
+  box-shadow:var(--shadow);transition:.16s ease;overflow:hidden;
 }
-.form-row.clickable{cursor:pointer}
-.form-row.clickable:hover{border-color:#ffc4a7;box-shadow:0 10px 26px rgba(255,100,30,.10);transform:translateY(-2px)}
-.form-row.off{opacity:.62}
+.form-item.clickable{cursor:pointer}
+.form-item.clickable:hover{border-color:#ffc4a7;box-shadow:0 10px 26px rgba(255,100,30,.10);transform:translateY(-2px)}
+.form-item.off{opacity:.62}
+.form-row{padding:18px 20px;display:flex;align-items:center;gap:16px}
+
+/* ── แถบความคืบหน้า ──
+   ตอบคำถามแรกที่คนเปิดหน้านี้มาถาม: ทำไปถึงไหนแล้ว เหลืออีกเท่าไร
+   นับเฉพาะคนที่ผู้ใช้คนนี้เห็น สาขาจึงไม่เห็นยอดของสาขาอื่น */
+.fr-progress{padding:0 20px 16px;display:flex;flex-direction:column;gap:7px}
+.fr-bar{height:7px;background:#eef0f3;border-radius:99px;overflow:hidden}
+.fr-bar span{display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,#ff8a3c,var(--orange));transition:width .3s ease}
+.fr-pg{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--muted);font-weight:600}
+.fr-pg b{color:var(--ink);font-weight:800}
 .fr-emoji{font-size:30px;line-height:1;flex:none}
 .fr-body{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
 .fr-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -96,7 +106,7 @@ label{font-weight:700;font-size:14px;display:block;margin-bottom:6px}
 .fr-go{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
   background:var(--orange);color:#fff;box-shadow:0 2px 8px rgba(255,100,30,.32)}
 .fr-go svg{width:17px;height:17px}
-.form-row.clickable:hover .fr-go{transform:translateX(2px)}
+.form-item.clickable:hover .fr-go{transform:translateX(2px)}
 
 /* ── ตาราง ── */
 .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
@@ -178,6 +188,7 @@ summary{font-weight:700;cursor:pointer}
 
   /* แถวฟอร์มบนมือถือ — ไอคอนเล็กลง ขอบในแคบลง ปุ่มไปอยู่ท้ายแถวเมตา */
   .form-row{padding:14px 15px;gap:12px;align-items:flex-start}
+  .fr-progress{padding:0 15px 13px}
   .fr-emoji{font-size:25px}
   .fr-title{font-size:15.5px}
   .fr-desc{font-size:13px}
@@ -254,6 +265,9 @@ const ME = (function(){
 
 /* ── สถานะหน้าจอ ─────────────────────────────────────────────────── */
 let forms = [], people = [], responses = [];
+/* ที่เรากรอกไปแล้ว — คีย์คือ "form_key|round" ค่าคือชุด subject_id
+   ใช้คิดความคืบหน้าบนหน้ารายการ โดยไม่ต้องโหลดคำตอบทั้งก้อน */
+let myDone = {};
 let tab = 'list';
 let fill = null;    // {form, subject, answers, texts, panel, panels, sections}
 let editing = null; // ฟอร์มที่กำลังแก้ในแท็บจัดการ
@@ -538,6 +552,18 @@ async function boot(){
     return;
   }
 
+  /* ดึงเฉพาะสามคอลัมน์ที่ใช้นับความคืบหน้า ไม่ต้องลากคำตอบทั้งก้อนมา
+     ถ้าดึงไม่ได้ก็แค่ไม่มีแถบความคืบหน้า หน้าที่เหลือยังใช้ได้ปกติ */
+  try{
+    const { data } = await SB.from('of_responses')
+      .select('form_key,round,subject_id').eq('rater_key', ME.code);
+    myDone = {};
+    (data || []).forEach(r => {
+      const k = r.form_key + '|' + (r.round || '');
+      (myDone[k] = myDone[k] || new Set()).add(r.subject_id);
+    });
+  }catch(e){ myDone = {}; }
+
   /* ยังไม่มีฟอร์มสักชุด → ใส่ชุดตั้งต้น Silver/Gold ให้ (เฉพาะทีมสำนักงาน) */
   if (!forms.length && ME.isAdmin){
     const { error } = await SB.from('of_forms').insert(SEED_FORM);
@@ -617,10 +643,16 @@ function renderList(){
     <div class="form-rows">
       ${list.map(f => {
         const nq = (f.sections || []).reduce((a, sec) => a + (sec.q || []).length, 0);
-        const ns = f.subject_required ? subjectsFor(f).length : 0;
+        const subs = f.subject_required ? subjectsFor(f) : [];
+        const ns = subs.length;
+        /* นับเฉพาะคนที่เราเห็นและกรอกไปแล้ว — สาขาจะไม่เห็นยอดของสาขาอื่น
+           ตัวเลขจึงเป็นของ 'งานที่ฉันต้องทำ' ไม่ใช่ยอดรวมทั้งบริษัท */
+        const set = myDone[f.key + '|' + (f.round || '')] || new Set();
+        const done = subs.filter(x => set.has(x.id)).length;
         const open = f.status === 'open';
         return `
-        <div class="form-row ${open ? 'clickable' : 'off'}" ${open ? `onclick="startFill(${f.id})"` : ''}>
+        <div class="form-item ${open ? 'clickable' : 'off'}" ${open ? `onclick="startFill(${f.id})"` : ''}>
+        <div class="form-row">
           <span class="fr-emoji">${esc(f.emoji || '📋')}</span>
           <span class="fr-body">
             <span class="fr-top">
@@ -631,10 +663,18 @@ function renderList(){
             <span class="fr-meta">
               ${f.round ? `<span><b>${esc(f.round)}</b></span>` : ''}
               ${nq ? `<span>${nq} คำถาม</span>` : ''}
-              ${f.subject_required ? `<span>${ns} คนที่ต้องประเมิน</span>` : ''}
             </span>
           </span>
           ${open ? '<span class="fr-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>' : ''}
+        </div>
+        ${open && f.subject_required && ns ? `
+        <div class="fr-progress">
+          <div class="fr-bar"><span style="width:${Math.round(done / ns * 100)}%"></span></div>
+          <div class="fr-pg">
+            <span>กรอกแล้ว <b>${done}</b> จาก <b>${ns}</b> คน</span>
+            <span>${done >= ns ? 'ครบทุกคนแล้ว' : `เหลืออีก <b>${ns - done}</b> คน`}</span>
+          </div>
+        </div>` : ''}
         </div>`;
       }).join('')}
     </div>`;
