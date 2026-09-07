@@ -295,10 +295,18 @@ const SB  = window.supabase.createClient(SB_URL, SB_KEY);
 /* ล็อกอินแบบไม่ระบุตัวตน — ต้องมีก่อนล็อก policy
    ตารางนี้เก็บรายชื่อผู้ถูกประเมินและคำตอบรายบุคคล ไม่ควรเปิดให้ใครก็อ่านได้
    ล้มเหลวไม่ปิดระบบ — ตอน policy ยังเปิดอยู่ก็ทำงานได้ปกติ */
-const SB_AUTH = SB.auth.signInAnonymously()
-  .then(function (r) { return !(r && r.error); })
-  .catch(function () { return false; });
-function sbReady() { return SB_AUTH; }
+var SB_AUTH = null;
+function sbReady() {
+  if (!SB_AUTH) {
+    try {
+      SB_AUTH = SB.auth.signInAnonymously()
+        .then(function (r) { return !(r && r.error); })
+        .catch(function () { return false; });
+    } catch (e) { SB_AUTH = Promise.resolve(false); }
+  }
+  return SB_AUTH;
+}
+sbReady();   /* เริ่มล็อกอินทันทีที่โหลดหน้า ไม่ต้องรอให้มีคนเรียกใช้ */
 const $   = s => document.querySelector(s);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone = o => JSON.parse(JSON.stringify(o));

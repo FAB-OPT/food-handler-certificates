@@ -6461,9 +6461,11 @@ var HUB_SB = {
          ตอนนี้ตารางทั้งหมดเปิดให้ anon อ่านเขียนได้ ซึ่งแปลว่าใครถือคีย์ที่อยู่ใน
          หน้าเว็บสาธารณะ ดึงรายชื่อพนักงานพร้อมเลขบัตรประชาชนออกไปได้ทั้งก้อน
          ล้มเหลวไม่ปิดระบบ — ตอน policy ยังเปิดอยู่ก็ทำงานได้ปกติ */
-      HUB_SB.auth = HUB_SB.client.auth.signInAnonymously()
-        .then(function (r) { return !(r && r.error); })
-        .catch(function () { return false; });
+      try {
+        HUB_SB.auth = HUB_SB.client.auth.signInAnonymously()
+          .then(function (r) { return !(r && r.error); })
+          .catch(function () { return false; });
+      } catch (e) { HUB_SB.auth = Promise.resolve(false); }
     } catch (e) { console.warn('[HUB] ต่อ Supabase ไม่ได้ — ใช้ Google Sheets ต่อ', e); }
   }
 })();
