@@ -1517,7 +1517,7 @@ function deleteExamRequest(id) {
    ======================================================================= */
 var CKB_PROJECT = 'checklist-a89e2';
 /* คีย์นี้เป็นคีย์ฝั่งหน้าเว็บ อยู่ใน index.html ที่เปิดสาธารณะอยู่แล้ว ไม่ใช่ความลับ */
-var CKB_KEY = 'AIzaSyB489GnLRLLL00a-5JhsGBn5y7W8STIGpI';
+var CKB_KEY = 'AIzaSyB489GnLRlLL00a-5JhsGBn5y7W8STIGpI';
 var CKB_BASE = 'https://firestore.googleapis.com/v1/projects/' + CKB_PROJECT + '/databases/(default)/documents';
 var CKB_FOLDER = 'Checklist Backups';
 var CKB_TZ = 'Asia/Bangkok';
