@@ -1127,10 +1127,10 @@ html[data-brand="santafe"] .btn.pri:hover{box-shadow:0 6px 16px color-mix(in srg
           <button class="mtab on" data-t="branch" onclick="Master.tab('branch')"><span>🏪</span>สาขา</button>
           <button class="mtab" data-t="bzm" onclick="Master.tab('bzm')"><span>👤</span>ผู้จัดการเขต</button>
           <button class="mtab" data-t="trainer" onclick="Master.tab('trainer')"><span>🧑‍🔬</span>ผู้ตรวจ</button>
-          <button class="mtab" data-t="materials" onclick="Master.tab('materials')"><span>🥬</span>วัตถุดิบ</button>
-          <button class="mtab" data-t="menus" onclick="Master.tab('menus')"><span>🍽️</span>เมนู</button>
+          <button class="mtab" data-t="materials" data-need="FQA" onclick="Master.tab('materials')"><span>🥬</span>วัตถุดิบ</button>
+          <button class="mtab" data-t="menus" data-need="FQA" onclick="Master.tab('menus')"><span>🍽️</span>เมนู</button>
           <button class="mtab" data-t="lists" onclick="Master.tab('lists')"><span>⚙️</span>ตัวเลือกในฟอร์ม</button>
-          <button class="mtab" data-t="nstopics" onclick="Master.tab('nstopics')"><span>🎓</span>หัวข้อสอนงาน</button>
+          <button class="mtab" data-t="nstopics" data-need="VISIT" onclick="Master.tab('nstopics')"><span>🎓</span>หัวข้อสอนงาน</button>
           <button class="mtab" data-t="system" onclick="Master.tab('system')"><span>📊</span>ข้อมูลในระบบ</button>
           <button class="mtab" data-t="backup" onclick="Master.tab('backup')"><span>💾</span>สำรองข้อมูล</button>
         </div>
@@ -1229,18 +1229,29 @@ const DEFAULT_MASTER = {
     channels:   ['ทานที่ร้าน','Take away','Grab','Line Man','Shopee Food'],
     severity:   ['ต่ำ','ปานกลาง','สูง'],
     visitTypes: ['คะแนน QA ไม่ถึงเกณฑ์มาตรฐาน','Re-Training','อื่นๆ'],
+    staResults: ['ผ่าน','ต้องปรับปรุง','ไม่ผ่าน'],
     photoGroups:['วัตถุดิบ','เมนูอาหาร','หน้าร้าน / ทั่วไป']
   }
 };
 
+/* forms = ฟอร์มที่ใช้รายการนี้ · ไม่ใส่ = ทุกฟอร์มใช้
+   มีไว้ให้หน้าจัดการฐานข้อมูลซ่อนของที่แบรนด์นั้นไม่ได้ใช้
+   ก่อนหน้านี้ซานตาเฟ่ต้องเลื่อนผ่านวัตถุดิบ เมนู และประเภท Complaint
+   ทั้งที่ฟอร์มที่ใช้จริงไม่มีสักอย่าง */
 const LIST_META = {
-  fqaItems:   {label:'หัวข้อการตรวจวัตถุดิบ (FQA)', note:'ใช้เป็นเช็กลิสต์ในฟอร์ม FQA'},
-  categories: {label:'ประเภท Complaint', note:'ถ้ามี “อื่นๆ” ระบบจะเปิดช่องให้ระบุเพิ่ม'},
-  channels:   {label:'ช่องทางที่รับบริการ', note:'ทานที่ร้าน / เดลิเวอรี'},
-  severity:   {label:'ระดับความรุนแรง', note:'เรียงจากเบาไปหนัก'},
-  visitTypes: {label:'ประเภทการเข้า Visit', note:''},
+  fqaItems:   {label:'หัวข้อการตรวจวัตถุดิบ (FQA)', note:'ใช้เป็นเช็กลิสต์ในฟอร์ม FQA', forms:['FQA']},
+  categories: {label:'ประเภท Complaint', note:'ถ้ามี “อื่นๆ” ระบบจะเปิดช่องให้ระบุเพิ่ม', forms:['FSQ']},
+  channels:   {label:'ช่องทางที่รับบริการ', note:'ทานที่ร้าน / เดลิเวอรี', forms:['FSQ']},
+  severity:   {label:'ระดับความรุนแรง', note:'เรียงจากเบาไปหนัก', forms:['FSQ']},
+  visitTypes: {label:'ประเภทการเข้า Visit', note:'', forms:['VISIT']},
+  staResults: {label:'ผลการทวนสอบพนักงาน', note:'ใช้ในหัวข้อ “ทวนสอบมาตรฐานการทำงาน” ท้ายฟอร์ม', forms:['STA']},
   photoGroups:{label:'หมวดรูปประกอบ', note:''}
 };
+/* แบรนด์นี้ใช้รายการนี้ไหม */
+function listUsed(k){
+  const f = LIST_META[k] && LIST_META[k].forms;
+  return !f || f.some(t => Brand.has(t));
+}
 
 const TYPE_LABEL = {FQA:'ฟอร์ม FQA', FSQ:'FSQ กรณี Complaint', VISIT:'ฟอร์ม Visit', STA:'ฟอร์ม Visit'};
 
@@ -2861,7 +2872,13 @@ const STA_FORM = [
 
 /* ผลการทวนสอบพนักงาน — ในไฟล์ต้นฉบับเป็นช่องติ๊กเปล่า 3 ช่อง ไม่มีข้อความกำกับ
    จึงตั้งชื่อไว้ตามที่ใช้กันทั่วไปก่อน แก้ที่บรรทัดนี้ได้ทันทีถ้าของจริงเรียกอย่างอื่น */
-const STA_VERIFY_RESULTS = ['ผ่าน','ต้องปรับปรุง','ไม่ผ่าน'];
+/* อ่านจากข้อมูลหลัก (จัดการฐานข้อมูล → ตัวเลือกในฟอร์ม) แก้ได้เองโดยไม่ต้องแก้โค้ด
+   ถ้าลบจนหมดให้ถอยไปใช้ชุดตั้งต้น ไม่งั้นช่องเลือกจะว่างแล้วกรอกฟอร์มไม่จบ */
+const STA_VERIFY_FALLBACK = ['ผ่าน','ต้องปรับปรุง','ไม่ผ่าน'];
+function staResults(){
+  const a = M.list('staResults');
+  return (Array.isArray(a) && a.length) ? a : STA_VERIFY_FALLBACK;
+}
 const STA_VERIFY_GROUPS = [KIT, SRV];
 
 /* คิดคะแนน — ผ่าน = ได้เต็ม · ไม่ผ่าน = 0 · N/A = ไม่นับทั้งตัวตั้งและตัวหาร
@@ -3390,7 +3407,7 @@ const Form = {
             <div class="fld"><label class="lbl">ผลการประเมิน</label>
               <select class="inp" onchange="Form.setRow('verify',${i},'result',this.value)">
                 <option value="">— เลือก —</option>
-                ${STA_VERIFY_RESULTS.map(r=>`<option ${v.result===r?'selected':''}>${esc(r)}</option>`).join('')}</select></div>
+                ${staResults().map(r=>`<option ${v.result===r?'selected':''}>${esc(r)}</option>`).join('')}</select></div>
             <div class="fld"><label class="lbl">ความคิดเห็นเพิ่มเติม</label>
               <input class="inp" value="${attr(v.comment)}" oninput="Form.setRow('verify',${i},'comment',this.value)"></div>
           </div>
@@ -3862,9 +3879,23 @@ const Master = {
   statBar(){
     const el=document.getElementById('mStat'); if(!el) return;
     const st=(v,k)=>`<div class="st"><div class="v">${v}</div><div class="k">${k}</div></div>`;
-    el.innerHTML = st(M.branches().length,'สาขา')+st(M.bzms().length,'ผู้จัดการเขต')+st(M.trainers().length,'ผู้ตรวจ')+st(M.materials().length,'วัตถุดิบ')+st(M.menus().length,'เมนู');
+    let h = st(M.branches().length,'สาขา')+st(M.bzms().length,'ผู้จัดการเขต')+st(M.trainers().length,'ผู้ตรวจ');
+    if(Brand.has('FQA')) h += st(M.materials().length,'วัตถุดิบ')+st(M.menus().length,'เมนู');
+    el.innerHTML = h;
+  },
+  /* ซ่อนแท็บของฟอร์มที่แบรนด์นี้ไม่ได้ใช้ — กันเปิดไปเจอหน้าว่างที่แก้ไปก็ไม่มีผล */
+  syncTabs(){
+    let hidden = false;
+    document.querySelectorAll('#mTabs .mtab').forEach(b=>{
+      const need = b.dataset.need;
+      const ok = !need || Brand.has(need);
+      b.style.display = ok ? '' : 'none';
+      if(!ok && b.dataset.t === this.cur) hidden = true;
+    });
+    if(hidden) this.cur = 'branch';
   },
   render(){
+    this.syncTabs();
     this.statBar();
     document.querySelectorAll('#mTabs .mtab').forEach(b=>b.classList.toggle('on',b.dataset.t===this.cur));
     document.getElementById('mBodyPane').innerHTML =
@@ -4051,7 +4082,7 @@ const Master = {
     return `<div style="padding:18px">
       <p class="hint" style="margin:0 0 14px">รายการเหล่านี้ใช้เป็นตัวเลือกในแบบฟอร์ม แก้ไขข้อความในช่องแล้วกด Enter หรือคลิกนอกช่องเพื่อบันทึก</p>
       <div class="grid g2">
-      ${Object.keys(LIST_META).map(k=>`
+      ${Object.keys(LIST_META).filter(listUsed).map(k=>`
         <div class="card" style="margin:0">
           <div class="hd"><h3 style="font-size:14px">${esc(LIST_META[k].label)}</h3><div class="sp"></div>
             <span class="note">${M.list(k).length} รายการ</span></div>
