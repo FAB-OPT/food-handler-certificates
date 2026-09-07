@@ -146,6 +146,31 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml;charset=utf8
 .dsec>span::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:15px;border-radius:2px;background:var(--accent)}
 .dsec .dsec-link{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--accent);cursor:pointer;white-space:nowrap}
 .dsec .dsec-link:hover{text-decoration:underline}
+/* ── Store Training Audit (STA) ── */
+.sta-sum{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline;
+  padding:11px 14px;border:1px solid var(--border);border-radius:11px;background:var(--surface);margin-bottom:14px}
+.sta-sum b{font-size:20px;letter-spacing:-.4px}
+.sta-sum .pc{font-size:26px;font-weight:800;color:var(--accent)}
+.sta-sum .lbl{font-size:11.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+.sta-item{border-top:1px solid var(--border);padding:13px 0}
+.sta-item:first-child{border-top:0}
+.sta-q{font-size:13.5px;font-weight:700;line-height:1.5;margin:0 0 2px}
+.sta-q .no{color:var(--accent);margin-right:6px}
+.sta-part{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:9px}
+.sta-part .who{min-width:118px;font-size:12.5px;font-weight:600;color:var(--text2)}
+.sta-part .max{font-size:11.5px;color:var(--text3);min-width:44px}
+.sta-part .note{flex:1;min-width:150px}
+.sta-part .note input{width:100%;border:1px solid var(--border);border-radius:8px;padding:7px 10px;
+  font-family:inherit;font-size:12.5px;background:var(--surface);color:var(--text)}
+.sta-mk{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.sta-mk button{border:0;background:var(--surface);color:var(--text2);font-family:inherit;font-size:12px;
+  font-weight:700;padding:7px 12px;cursor:pointer;border-left:1px solid var(--border)}
+.sta-mk button:first-child{border-left:0}
+.sta-mk button.on-pass{background:#0E9F6E;color:#fff}
+.sta-mk button.on-fail{background:#D6142B;color:#fff}
+.sta-mk button.on-na{background:#6B7280;color:#fff}
+.sta-na{font-size:11.5px;color:var(--text3);font-style:italic}
+@media(max-width:640px){.sta-part .who{min-width:100%}.sta-sum{gap:8px 14px}}
 /* ปฏิทินแผนการตรวจ */
 .cal-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .cal-head b{font-size:15px;font-weight:800;min-width:96px;text-align:center}
@@ -852,6 +877,7 @@ html[data-brand="santafe"] .btn.pri:hover{box-shadow:0 6px 16px color-mix(in srg
       <button class="nav" data-v="fqa" data-form="FQA"><span class="ic">✓</span> ฟอร์ม FQA</button>
       <button class="nav" data-v="fsq" data-form="FSQ"><span class="ic">!</span> FSQ กรณี Complaint</button>
       <button class="nav" data-v="visit" data-form="VISIT"><span class="ic">◎</span> ฟอร์ม Visit</button>
+      <button class="nav" data-v="sta" data-form="STA"><span class="ic">★</span> Store Training Audit</button>
 
       <div class="navgrp">รายงานและข้อมูล</div>
       <button class="nav" data-v="report"><span class="ic">📄</span> ออกรายงาน</button>
@@ -1049,6 +1075,9 @@ html[data-brand="santafe"] .btn.pri:hover{box-shadow:0 6px 16px color-mix(in srg
       <section class="view" id="v-fsq"></section>
       <section class="view" id="v-visit"></section>
 
+      <!-- ---------- STA (Store Training Audit) ---------- -->
+      <section class="view" id="v-sta"></section>
+
       <!-- ---------- PLAN ---------- -->
       <section class="view" id="v-plan"></section>
 
@@ -1177,7 +1206,7 @@ const LIST_META = {
   photoGroups:{label:'หมวดรูปประกอบ', note:''}
 };
 
-const TYPE_LABEL = {FQA:'ฟอร์ม FQA', FSQ:'FSQ กรณี Complaint', VISIT:'ฟอร์ม Visit'};
+const TYPE_LABEL = {FQA:'ฟอร์ม FQA', FSQ:'FSQ กรณี Complaint', VISIT:'ฟอร์ม Visit', STA:'Store Training Audit'};
 
 /* หมวดวัตถุดิบ — ใช้จัดกลุ่มในดรอปดาวน์ "สุ่มตรวจ" ของฟอร์ม FQA */
 const MAT_CAT = {
@@ -1211,7 +1240,7 @@ const BRANDS = {
     logo:'../icons/brand-santafe.png',   /* ป้ายจัตุรัสมุมมน — พอดีกล่องไอคอน ไม่เหลือพื้นขาวโผล่ */
     /* เข้าตรวจสาขาอย่างเดียว — สุ่มตรวจวัตถุดิบกับเคสร้องเรียนยังไม่ได้ใช้
        เพิ่มทีหลังได้โดยเติมชื่อฟอร์มลงในรายการนี้ ไม่ต้องแก้ที่อื่น */
-    forms:['VISIT'],
+    forms:['VISIT','STA'],
     /* หน้าตาชุดใหม่ (แถบตัวกรองเป็นชิป · กล่องภาพรวมกล่องเดียว · โทนหมึก)
        ผูกไว้กับแบรนด์ตรง ๆ ไม่ใช่เดาจากจำนวนฟอร์ม เพราะเป็นคนละเรื่องกัน
        เจ๊แดงยังใช้หน้าตาเดิมทุกอย่างจนกว่าจะสั่งเปลี่ยน */
@@ -1612,7 +1641,7 @@ let FV_PERMS = null;
 const FV_VIEW_ACTION = {
   dash:'view-dash', list:'view-list', plan:'view-plan',
   coverage:'view-plan',   /* ใช้สิทธิ์เดียวกับ "แผนการตรวจสาขา" — เป็นเรื่องการวางแผนเข้าตรวจเหมือนกัน */
-  fqa:'form-fqa', fsq:'form-fsq', visit:'form-visit',
+  fqa:'form-fqa', fsq:'form-fsq', visit:'form-visit', sta:'form-visit',   /* STA ใช้สิทธิ์เดียวกับ Visit — คนกลุ่มเดียวกันเข้าตรวจ */
   report:'view-report', io:'view-io', master:'view-master'
 };
 function fvLoadPermsCache(){
@@ -2477,7 +2506,8 @@ const App = {
     const items=[
       {icon:'✓', label:'ฟอร์ม FQA', sub:'ตรวจวัตถุดิบและเมนู', run:()=>this.go('fqa'), v:'fqa', t:'FQA'},
       {icon:'!', label:'FSQ กรณี Complaint', sub:'บันทึกเคสร้องเรียน', run:()=>this.go('fsq'), v:'fsq', t:'FSQ'},
-      {icon:'◎', label:'ฟอร์ม Visit', sub:'บันทึกการเข้าพบสาขา', run:()=>this.go('visit'), v:'visit', t:'VISIT'}
+      {icon:'◎', label:'ฟอร์ม Visit', sub:'บันทึกการเข้าพบสาขา', run:()=>this.go('visit'), v:'visit', t:'VISIT'},
+      {icon:'★', label:'Store Training Audit', sub:'ตรวจการสอนงานและเอกสาร (96 คะแนน)', run:()=>this.go('sta'), v:'sta', t:'STA'}
     ].filter(it=>Brand.has(it.t) && fvCan(FV_VIEW_ACTION[it.v]));
     /* แบรนด์ที่ใช้ฟอร์มเดียว ไม่ต้องให้เลือก — กดปุ่มเพิ่มแล้วเข้าฟอร์มเลย */
     if(items.length===1) return items[0].run();
@@ -2515,13 +2545,13 @@ const App = {
     document.querySelectorAll('.view').forEach(s=>s.classList.remove('on'));
     document.getElementById('v-'+v).classList.add('on');
     this.closeSheet();
-    const isForm=(v==='fqa'||v==='fsq'||v==='visit');
+    const isForm=(v==='fqa'||v==='fsq'||v==='visit'||v==='sta');
     document.body.classList.toggle('form-view', isForm);
     const meta={
       dash:'แดชบอร์ด', list:'รายการตรวจทั้งหมด',
       fqa:'แบบฟอร์มการตรวจ Food Quality Assurance (FQA)',
       fsq:'แบบฟอร์ม Food and Service Quality กรณี Complaint',
-      visit:'แบบฟอร์ม Visit', plan:'แผนการตรวจสาขา', report:'ออกรายงาน',
+      visit:'แบบฟอร์ม Visit', sta:'Store Training Audit (STA)', plan:'แผนการตรวจสาขา', report:'ออกรายงาน',
       coverage:'สรุปการเข้าตรวจสาขา',
       master:'จัดการฐานข้อมูล', io:'นำเข้าข้อมูล'
     }[v];
@@ -2532,7 +2562,7 @@ const App = {
     if(v==='master') Master.render();
     if(v==='plan') Plan.open();
     if(v==='coverage') Coverage.render();
-    if(isForm){ Form.open(v==='fqa'?'FQA':v==='fsq'?'FSQ':'VISIT', Form.pendingEdit); Form.pendingEdit=null; }
+    if(isForm){ Form.open(v==='fqa'?'FQA':v==='fsq'?'FSQ':v==='sta'?'STA':'VISIT', Form.pendingEdit); Form.pendingEdit=null; }
     /* ปุ่มฟอร์ม — ตอน "แก้ไข" รายการเดิม ไม่ต้องมีปุ่ม "ล้างฟอร์ม" */
     const formBtns = (isForm && !Form.editing ? `<button class="btn" onclick="Form.reset()">ล้างฟอร์ม</button>` : '')
       + (isForm ? `<button class="btn pri" onclick="Form.submit()">บันทึกผลการตรวจ</button>` : '');
@@ -2748,6 +2778,89 @@ function nsSubs(main){ const a = nsTopics()[main]; return Array.isArray(a) ? a :
 const NS_METHODS = ['A = สังเกตการณ์','B = การสัมภาษณ์','C = ตรวจงาน','D = การทดสอบ'];
 const NS_SCORES = [['1','1 = ยังทำไม่ได้ตามมาตรฐาน (0-49%)'],['2','2 = ทำได้บางส่วน (50-69%)'],['3','3 = ทำได้ตามมาตรฐาน (70-79%)'],['4','4 = สูงกว่ามาตรฐาน (80-89%)'],['5','5 = สูงกว่ามาตรฐานมาก (90-100%)']];
 
+
+/* ══════════ Store Training Audit (STA) ══════════
+
+   ถอดมาจากไฟล์ FM-OPT(TR)-014 ของซานตาเฟ่ (96 คะแนน 2 หมวด)
+   แต่ละข้อแยกเป็นส่วนงาน ทีมผู้จัดการ / ครัว / บริการ ซึ่งคะแนนไม่เท่ากัน
+   จึงเก็บเป็นข้อมูล ไม่ฝังในหน้าจอ — แก้เกณฑ์วันหน้าแก้ที่นี่ที่เดียว
+
+   max = คะแนนเต็มของส่วนนั้น · na:true = ไม่คิดคะแนน (ในไฟล์ต้นฉบับกำหนดไว้แบบนั้น)
+   hint = ข้อความที่ผู้ตรวจต้องจดเพิ่ม เช่น ชื่อคน เดือน จำนวนเล่ม ══════════ */
+const STA_CODE = 'FM-OPT(TR)-014';
+const MGR = 'ทีมผู้จัดการ', KIT = 'พนักงานครัว', SRV = 'พนักงานบริการ';
+const STA_FORM = [
+  { key:'A', name:'CAREER PATH & COACHING', group:'การสอนงาน', items:[
+    { no:'A1', text:'ทีมผู้จัดการทุกคนทราบรายละเอียดของการเติบโตในสายงานได้อย่างดีและถูกต้องหรือไม่',
+      parts:[{k:'mgr', who:MGR, max:5, hint:'ชื่อ-นามสกุล'}] },
+    { no:'A2', text:'พนักงานทุกคนทราบรายละเอียดของการเติบโตในสายงานได้อย่างดีและถูกต้องหรือไม่',
+      parts:[{k:'kit', who:KIT, max:2.5, hint:'ชื่อ-นามสกุล'},{k:'srv', who:SRV, max:2.5, hint:'ชื่อ-นามสกุล'}] },
+    { no:'A3', text:'มีการจัดทำแผนการสอนงานของพนักงานอย่างชัดเจน',
+      parts:[{k:'mgr', who:MGR, max:5, hint:'เดือน'},{k:'kit', who:KIT, max:5, hint:'เดือน'},{k:'srv', who:SRV, max:5, hint:'เดือน'}] },
+    { no:'A4', text:'มีการติดตามผลและประเมินผลการฝึกอบรมอย่างสม่ำเสมอ',
+      parts:[{k:'mgr', who:MGR, max:5, hint:'เดือน'},{k:'kit', who:KIT, max:5, hint:'เดือน'},{k:'srv', who:SRV, max:5, hint:'เดือน'}] },
+    { no:'A5', text:'พนักงานระดับ Silver / Gold ผ่านการ Train The Trainer แล้ว',
+      parts:[{k:'kit', who:KIT, max:5, hint:'จำนวน (คน)'},{k:'srv', who:SRV, max:5, hint:'จำนวน (คน)'}] },
+    { no:'A6', text:'มีบันทึกการสอนงานพนักงานใหม่ และพนักงานเก่า อย่างต่อเนื่องตาม Training Road Map',
+      parts:[{k:'mgr', who:MGR, max:5, hint:'จำนวน (คน)'},{k:'kit', who:KIT, max:5, hint:'จำนวน (คน)'},{k:'srv', who:SRV, max:5, hint:'จำนวน (คน)'}] },
+    { no:'A7', text:'มีการลงบันทึกการประเมินผล การสอบปรับระดับ / ปรับตำแหน่งอย่างถูกต้อง',
+      parts:[{k:'mgr', who:MGR, max:0, na:true, hint:'จำนวน (คน)'},{k:'kit', who:KIT, max:3, hint:'จำนวน (คน)'},{k:'srv', who:SRV, max:3, hint:'จำนวน (คน)'}] },
+    { no:'A8', text:'มีการลงบันทึกรับทราบการพัฒนาและการปรับตำแหน่งจาก BZM',
+      parts:[{k:'mgr', who:MGR, max:2, hint:'แผนพัฒนา / การปรับตำแหน่ง'},{k:'kit', who:KIT, max:1.5, hint:'แผนพัฒนา / การปรับตำแหน่ง'},{k:'srv', who:SRV, max:1.5, hint:'แผนพัฒนา / การปรับตำแหน่ง'}] }
+  ]},
+  { key:'B', name:'DOCUMENT & MANUALS', group:'เอกสารสอนงาน', items:[
+    { no:'B1', text:'คู่มือมาตรฐานงานบริการ แบบซานตาเฟ่ พร้อมใช้งานและจัดเก็บเรียบร้อย อยู่ในสภาพดี', parts:[{k:'x', max:2, hint:'จำนวน (เล่ม)'}] },
+    { no:'B2', text:'คู่มือความอร่อย พร้อมใช้งานและจัดเก็บเรียบร้อย อยู่ในสภาพดี', parts:[{k:'x', max:2, hint:'จำนวน (เล่ม)'}] },
+    { no:'B3', text:'คู่มือการตรวจมาตรฐาน OSS พร้อมใช้และจัดเก็บเรียบร้อย อยู่ในสภาพดี', parts:[{k:'x', max:2, hint:'จำนวน (เล่ม) — จาก KT DATA CENTER'}] },
+    { no:'B4', text:'คู่มือการสอนงาน พร้อมใช้และจัดเก็บเรียบร้อย อยู่ในสภาพดี', parts:[{k:'x', max:2, hint:'จำนวน (เล่ม)'}] },
+    { no:'B5', text:'Quality Guide ของ QA พร้อมใช้ในการสอนงานและใช้ในการทำงาน', parts:[{k:'x', max:2, hint:'สภาพ'}] },
+    { no:'B6', text:'ไม่มีคู่มือเดิมที่ยกเลิกการใช้ อยู่ในร้าน', parts:[{k:'x', max:2, hint:''}] },
+    { no:'B7', text:'แบบฟอร์มของ Operation พร้อมใช้งานและใช้ในการสอนงาน',
+      sub:['Daily Checklist (Open shift / Close shift)','Deployment Front / Back of The House','Team Roster / Staff Roster'],
+      parts:[{k:'x', max:2, hint:'ที่ขาด'}] },
+    { no:'B8', text:'ตรวจสอบรายชื่อพนักงานกับเครื่องสแกนนิ้วมือของสาขา เป็นปัจจุบันและถูกต้องหรือไม่', tag:'PDPA', parts:[{k:'x', max:3, hint:''}] },
+    { no:'B9', text:'การจัดส่งใบสมัครงาน / การเก็บเอกสารสมัครงาน / แฟ้มเก็บข้อมูลพนักงานเบื้องต้น', tag:'PDPA', parts:[{k:'x', max:3, hint:''}] }
+  ]}
+];
+
+/* ผลการทวนสอบพนักงาน — ในไฟล์ต้นฉบับเป็นช่องติ๊กเปล่า 3 ช่อง ไม่มีข้อความกำกับ
+   จึงตั้งชื่อไว้ตามที่ใช้กันทั่วไปก่อน แก้ที่บรรทัดนี้ได้ทันทีถ้าของจริงเรียกอย่างอื่น */
+const STA_VERIFY_RESULTS = ['ผ่าน','ต้องปรับปรุง','ไม่ผ่าน'];
+const STA_VERIFY_GROUPS = [KIT, SRV];
+
+/* คิดคะแนน — ผ่าน = ได้เต็ม · ไม่ผ่าน = 0 · N/A = ไม่นับทั้งตัวตั้งและตัวหาร
+   ข้อที่ยังไม่ได้ตอบก็ไม่นับเข้าตัวหาร คะแนนระหว่างกรอกจะได้ไม่ดูต่ำเกินจริง
+   (ตอนกดบันทึกมีตัวตรวจว่าต้องตอบครบทุกข้อก่อน) */
+function staScore(rec){
+  const mk = (rec && rec.marks) || {};
+  let got = 0, total = 0, done = 0, all = 0;
+  STA_FORM.forEach(sec => sec.items.forEach(it => it.parts.forEach(p => {
+    if(p.na) return;
+    all++;
+    const v = mk[it.no + '.' + p.k];
+    if(v === 'na') return;
+    if(!v) return;
+    done++; total += p.max;
+    if(v === 'pass') got += p.max;
+  })));
+  const full = STA_FORM.reduce((a,sec)=>a+sec.items.reduce((b,it)=>b+it.parts.reduce((c,p)=>c+(p.na?0:p.max),0),0),0);
+  return { got:got, total:total, full:full, done:done, all:all,
+           pct: total ? Math.round(got/total*1000)/10 : 0 };
+}
+function staSectionScore(rec, sec){
+  const mk = (rec && rec.marks) || {};
+  let got = 0, total = 0;
+  sec.items.forEach(it => it.parts.forEach(p => {
+    if(p.na) return;
+    const v = mk[it.no + '.' + p.k];
+    if(!v || v === 'na') return;
+    total += p.max; if(v === 'pass') got += p.max;
+  }));
+  return { got:got, total:total, full: sec.items.reduce((a,it)=>a+it.parts.reduce((b,p)=>b+(p.na?0:p.max),0),0) };
+}
+/* เลขสวย ๆ — 2.5 ให้เห็น 2.5 แต่ 5.0 ให้เห็น 5 */
+const staNum = n => (Math.round(n*10)/10).toString();
+
 const Form = {
   drafts:{}, type:null, pendingEdit:null, editing:false,
 
@@ -2757,11 +2870,15 @@ const Form = {
     if(type==='FQA'){ r.materials=[]; r.checks=M.list('fqaItems').map(i=>({item:i,result:'',detail:'',fix:''})); r.menus=[this.menuRow()]; }
     if(type==='FSQ'){ Object.assign(r,{complaint:'',menu:'',category:'',categoryOther:'',channel:'',severity:''}); r.issues=[this.issueRow()]; }
     if(type==='VISIT'){ r.visitType=[]; r.visitTypeOther=''; r.topics=[this.topicRow()]; r.newStaff=[this.staffRow()]; }
+    /* STA — marks เก็บผลรายข้อ ('A1.mgr' → pass/fail/na) · notes เก็บสิ่งที่จดเพิ่มของข้อนั้น
+       แยกสองก้อนเพราะคนละเรื่องกัน และทำให้เพิ่ม/ลดข้อในเกณฑ์ทีหลังได้โดยใบเก่าไม่พัง */
+    if(type==='STA'){ r.marks={}; r.notes={}; r.verify=STA_VERIFY_GROUPS.map(g=>this.verifyRow(g)); r.comment=''; }
     return r;
   },
   menuRow(){ return {menu:'',cook:'',taste:'',detail:'',fix:''}; },
   issueRow(){ return {problem:'',immediate:'',cause:'',prevention:'',advice:''}; },
   topicRow(){ return {topic:'',problem:'',advice:''}; },
+  verifyRow(group){ return {group:group||STA_VERIFY_GROUPS[0], name:'', position:'', tenure:'', topic:'', result:'', comment:''}; },
   staffRow(){ return {name:'',startDate:'',tenure:'',evals:[this.evalRow()]}; },
   evalRow(){ return {main:'',sub:'',method:'',score:'',detail:''}; },
 
@@ -2785,6 +2902,7 @@ const Form = {
     if((d.branch||'').trim()) return true;
     if(d.type==='FQA') return (d.materials&&d.materials.length>0) || (d.checks||[]).some(c=>c.result||c.detail||c.fix) || (d.menus||[]).some(m=>(m.menu||'').trim()||m.detail||m.fix);
     if(d.type==='FSQ') return (d.complaint||'').trim() || (d.menu||'').trim() || (d.issues||[]).some(i=>i.problem||i.immediate||i.cause||i.prevention||i.advice);
+    if(d.type==='STA') return Object.keys(d.marks||{}).length>0 || (d.verify||[]).some(v=>(v.name||'').trim()) || (d.comment||'').trim();
     if(d.type==='VISIT') return (d.topics||[]).some(t=>(t.topic||'').trim()||t.problem||t.advice)
       || (d.newStaff||[]).some(st=>(st.name||'').trim()||(st.startDate||'').trim()||(st.evals||[]).some(e=>e.main||e.sub||e.method||e.score||e.detail));
     return false;
@@ -2831,7 +2949,7 @@ const Form = {
     if(!d.dateEdited && d.date !== todayISO()){ d.date = todayISO(); ch = true; }
     if(!ch) return;
     this.persist();
-    if(['fqa','fsq','visit'].indexOf(App.view) >= 0) this.render();
+    if(['fqa','fsq','visit','sta'].indexOf(App.view) >= 0) this.render();
   },
   setRow(arr,i,k,v){ this.s[arr][i][k]=v; this.persist(); },
   addRow(arr){ const mk={menus:'menuRow',issues:'issueRow',topics:'topicRow'}[arr]; this.s[arr].push(this[mk]()); this.render(); },
@@ -2926,8 +3044,8 @@ const Form = {
 
   render(){
     const t=this.type;
-    const host=document.getElementById('v-'+(t==='FQA'?'fqa':t==='FSQ'?'fsq':'visit'));
-    host.innerHTML = this.header() + (t==='FQA'?this.fqaBody():t==='FSQ'?this.fsqBody():this.visitBody());
+    const host=document.getElementById('v-'+(t==='FQA'?'fqa':t==='FSQ'?'fsq':t==='STA'?'sta':'visit'));
+    host.innerHTML = this.header() + (t==='FQA'?this.fqaBody():t==='FSQ'?this.fsqBody():t==='STA'?this.staBody():this.visitBody());
     this.persist();
   },
 
@@ -3127,6 +3245,107 @@ const Form = {
     this.s.visitType=arr; if(!arr.includes('อื่นๆ')) this.s.visitTypeOther='';   // เลิกเลือกอื่นๆ = ล้างข้อความ
     this.render(); },
 
+
+  /* ===== STA (Store Training Audit) ===== */
+  staBody(){
+    const s=this.s;
+    if(!s.marks) s.marks={};
+    if(!s.notes) s.notes={};
+    if(!Array.isArray(s.verify)) s.verify=STA_VERIFY_GROUPS.map(g=>this.verifyRow(g));
+    const sc=staScore(s);
+
+    /* แถบคะแนนติดบนสุด — ผู้ตรวจเห็นตัวเลขขยับทันทีที่กด ไม่ต้องเลื่อนไปดูท้ายใบ */
+    const head=`<div class="sta-sum">
+      <div><div class="lbl">คะแนนที่ได้</div><b>${staNum(sc.got)}</b> <span style="color:var(--text3)">/ ${staNum(sc.total||sc.full)}</span></div>
+      <div><div class="lbl">คิดเป็น</div><span class="pc">${staNum(sc.pct)}%</span></div>
+      <div class="sp" style="flex:1"></div>
+      <div style="text-align:right"><div class="lbl">ตอบแล้ว</div><b style="font-size:15px">${sc.done}/${sc.all}</b>
+        ${sc.done<sc.all?`<div class="sta-na">ยังไม่ครบ ${sc.all-sc.done} ช่อง</div>`:`<div class="sta-na" style="color:#0E9F6E">ครบแล้ว</div>`}</div>
+    </div>`;
+
+    const mk=(no,k,cur)=>{
+      const b=(v,t,cls)=>`<button class="${cur===v?'on-'+cls:''}" onclick="Form.staMark('${no}.${k}','${v}')">${t}</button>`;
+      return `<span class="sta-mk">${b('pass','ผ่าน','pass')}${b('fail','ไม่ผ่าน','fail')}${b('na','N/A','na')}</span>`;
+    };
+
+    const secs=STA_FORM.map((sec,si)=>{
+      const ss=staSectionScore(s,sec);
+      const items=sec.items.map(it=>`
+        <div class="sta-item">
+          <p class="sta-q"><span class="no">${it.no}</span>${esc(it.text)}
+            ${it.tag?`<span class="tag" style="margin-left:6px">${esc(it.tag)}</span>`:''}</p>
+          ${it.sub?`<ul style="margin:4px 0 0 18px;padding:0;font-size:12px;color:var(--text3);line-height:1.7">${it.sub.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+          ${it.parts.map(p=>{
+            const key=it.no+'.'+p.k;
+            if(p.na) return `<div class="sta-part"><span class="who">${esc(p.who||'')}</span>
+              <span class="sta-na">ไม่คิดคะแนน (N/A ตามเกณฑ์)</span>
+              <span class="note"><input placeholder="${attr(p.hint||'บันทึกเพิ่มเติม')}" value="${attr(s.notes[key]||'')}" oninput="Form.staNote('${key}',this.value)"></span></div>`;
+            return `<div class="sta-part">
+              <span class="who">${esc(p.who||'ผลการตรวจ')}</span>
+              <span class="max">${staNum(p.max)} คะแนน</span>
+              ${mk(it.no,p.k,s.marks[key])}
+              <span class="note"><input placeholder="${attr(p.hint||'บันทึกเพิ่มเติม')}" value="${attr(s.notes[key]||'')}" oninput="Form.staNote('${key}',this.value)"></span>
+            </div>`;
+          }).join('')}
+        </div>`).join('');
+      return `<div class="card">
+        <div class="hd"><span class="sec-no">${si+2}</span><h3>${esc(sec.name)}</h3><div class="sp"></div>
+          <span class="note">${esc(sec.group)} · ได้ ${staNum(ss.got)}/${staNum(ss.full)}</span></div>
+        <div class="bd">${items}</div></div>`;
+    }).join('');
+
+    return head + secs + this.verifyCard(STA_FORM.length+2) + `
+    <div class="card">
+      <div class="hd"><span class="sec-no">${STA_FORM.length+3}</span><h3>สรุปของผู้ตรวจ</h3></div>
+      <div class="bd"><div class="fld"><label class="lbl">ความเห็นและข้อแนะนำโดยรวม</label>
+        <textarea class="inp" rows="3" oninput="Form.set('comment',this.value)">${esc(s.comment||'')}</textarea></div></div>
+    </div>` + this.photoBlock(STA_FORM.length+4, 'รูปแนบเพิ่มเติม (ประกอบการตรวจ)');
+  },
+
+  staMark(key, val){
+    /* กดซ้ำที่เดิม = ยกเลิกคำตอบ — เผลอกดผิดแล้วแก้ได้โดยไม่ต้องเลือกอย่างอื่นไปก่อน */
+    if(this.s.marks[key]===val) delete this.s.marks[key]; else this.s.marks[key]=val;
+    this.persist(); this.render();
+  },
+  staNote(key, val){ this.s.notes[key]=val; this.persist(); },
+
+  /* ===== การ์ดทวนสอบมาตรฐานการทำงาน (พนักงาน) ===== */
+  verifyCard(no){
+    const list=this.s.verify;
+    return `<div class="card">
+      <div class="hd"><span class="sec-no">${no}</span><h3>ทวนสอบมาตรฐานการทำงาน (พนักงาน)</h3><div class="sp"></div>
+        <button class="btn sm" onclick="Form.addVerify()">＋ เพิ่มคน</button></div>
+      <div class="bd">
+        ${list.map((v,i)=>`
+        <div class="rep">
+          <div class="rn">คนที่ ${i+1}</div>
+          <button class="btn sm dgr rmv" onclick="Form.delVerify(${i})">ลบ</button>
+          <div class="grid g4">
+            <div class="fld"><label class="lbl">ส่วนงาน</label>
+              <select class="inp" onchange="Form.setRow('verify',${i},'group',this.value)">
+                ${STA_VERIFY_GROUPS.map(g=>`<option ${v.group===g?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
+            <div class="fld"><label class="lbl">ชื่อ-นามสกุล</label>
+              <input class="inp" value="${attr(v.name)}" oninput="Form.setRow('verify',${i},'name',this.value)"></div>
+            <div class="fld"><label class="lbl">ตำแหน่ง</label>
+              <input class="inp" value="${attr(v.position)}" oninput="Form.setRow('verify',${i},'position',this.value)"></div>
+            <div class="fld"><label class="lbl">อายุงาน</label>
+              <input class="inp" placeholder="เช่น 8 เดือน" value="${attr(v.tenure)}" oninput="Form.setRow('verify',${i},'tenure',this.value)"></div>
+          </div>
+          <div class="fld" style="margin-top:10px"><label class="lbl">เรื่องที่ทวนสอบ</label>
+            <textarea class="inp" rows="2" oninput="Form.setRow('verify',${i},'topic',this.value)">${esc(v.topic)}</textarea></div>
+          <div class="grid g2" style="margin-top:10px">
+            <div class="fld"><label class="lbl">ผลการประเมิน</label>
+              <select class="inp" onchange="Form.setRow('verify',${i},'result',this.value)">
+                <option value="">— เลือก —</option>
+                ${STA_VERIFY_RESULTS.map(r=>`<option ${v.result===r?'selected':''}>${esc(r)}</option>`).join('')}</select></div>
+            <div class="fld"><label class="lbl">ความคิดเห็นเพิ่มเติม</label>
+              <input class="inp" value="${attr(v.comment)}" oninput="Form.setRow('verify',${i},'comment',this.value)"></div>
+          </div>
+        </div>`).join('')}
+      </div></div>`;
+  },
+  addVerify(){ this.s.verify.push(this.verifyRow(STA_VERIFY_GROUPS[this.s.verify.length%STA_VERIFY_GROUPS.length])); this.render(); },
+  delVerify(i){ this.s.verify.splice(i,1); if(!this.s.verify.length) this.s.verify.push(this.verifyRow()); this.render(); },
   /* ===== การ์ดประเมินพนักงานใหม่ ===== */
   newStaffCard(no){
     const staff=this.nsList();
@@ -3200,6 +3419,21 @@ const Form = {
           if(need(m.detail)) return `เมนู "${m.menu}" ไม่ผ่าน — กรุณากรอกสิ่งที่พบ`;
           if(need(m.fix))    return `เมนู "${m.menu}" ไม่ผ่าน — กรุณากรอกวิธีแก้ไข`;
         }
+      }
+    }
+
+    if(s.type==='STA'){
+      /* ต้องตอบครบทุกช่อง — ใบที่ตอบไม่ครบทำให้เปอร์เซ็นต์ดูสูงกว่าความจริง
+         เพราะข้อที่ไม่ได้ตอบไม่ถูกนับเข้าตัวหาร */
+      for(const sec of STA_FORM) for(const it of sec.items) for(const p of it.parts){
+        if(p.na) continue;
+        if(!s.marks[it.no+'.'+p.k]) return `ข้อ ${it.no}${p.who?' ('+p.who+')':''} — ยังไม่ได้ให้ผลการตรวจ`;
+      }
+      for(let i=0;i<s.verify.length;i++){ const v=s.verify[i];
+        if(![v.name,v.position,v.tenure,v.topic,v.result,v.comment].some(x=>String(x||'').trim())) continue;  // แถวว่าง = ข้าม
+        if(need(v.name))   return `ทวนสอบพนักงานคนที่ ${i+1} — กรุณากรอกชื่อ`;
+        if(need(v.topic))  return `ทวนสอบ "${v.name}" — กรุณากรอกเรื่องที่ทวนสอบ`;
+        if(need(v.result)) return `ทวนสอบ "${v.name}" — กรุณาเลือกผลการประเมิน`;
       }
     }
 
@@ -3290,6 +3524,8 @@ function failCount(r){
   if(r.type==='FQA') return (r.checks||[]).filter(c=>c.result==='ไม่ผ่าน').length
     + (r.menus||[]).filter(m=>m.cook==='ไม่ผ่าน'||m.taste==='ไม่ผ่าน').length;
   if(r.type==='FSQ') return (r.issues||[]).filter(i=>(i.problem||'').trim()).length;
+  /* STA — ประเด็นที่พบ = ช่องที่ให้ผลว่าไม่ผ่าน */
+  if(r.type==='STA') return Object.keys(r.marks||{}).filter(k=>r.marks[k]==='fail').length;
   return (r.topics||[]).filter(t=>(t.problem||'').trim()).length;
 }
 function summaryLine(r){
@@ -3298,6 +3534,8 @@ function summaryLine(r){
     return f.length? f.slice(0,2).join(' · ')+(f.length>2?` +${f.length-2}`:'') : 'ผ่านทุกหัวข้อที่ตรวจ';
   }
   if(r.type==='FSQ') return r.complaint.slice(0,80)+(r.complaint.length>80?'…':'');
+  if(r.type==='STA'){ const sc=staScore(r);
+    return 'ได้ '+staNum(sc.got)+'/'+staNum(sc.total||sc.full)+' คะแนน ('+staNum(sc.pct)+'%)'; }
   return r.topics.map(t=>t.topic).filter(Boolean).slice(0,2).join(' · ');
 }
 /* ประเภทการเข้า Visit — รองรับทั้งแบบหลายค่า (array) และข้อมูลเก่า (string) · แทน "อื่นๆ" ด้วยข้อความที่ระบุ */
@@ -4265,9 +4503,9 @@ const Dash = {
 /* =======================================================================
    PLAN — ตารางนัดตรวจสาขา (เก็บเป็น record type=PLAN · ซิงค์ผ่าน cloud เดิม)
    ======================================================================= */
-const PLAN_TYPE = {FQA:'FQA', FSQ:'Complaint', VISIT:'Visit'};
-const PLAN_TYPE_COLOR = {FQA:'#D6142B', FSQ:'#E8820C', VISIT:'#1E63D6'};
-const planType = p => p==='FSQ'?'FSQ':p==='VISIT'?'VISIT':'FQA';
+const PLAN_TYPE = {FQA:'FQA', FSQ:'Complaint', VISIT:'Visit', STA:'STA'};
+const PLAN_TYPE_COLOR = {FQA:'#D6142B', FSQ:'#E8820C', VISIT:'#1E63D6', STA:'#0E9F6E'};
+const planType = p => p==='FSQ'?'FSQ':p==='VISIT'?'VISIT':p==='STA'?'STA':'FQA';
 const planTypeTag = t => { const k=planType(t), c=PLAN_TYPE_COLOR[k]; return `<span class="tag" style="background:${c}18;color:${c};border:1px solid ${c}55;font-weight:700">${PLAN_TYPE[k]}</span>`; };
 /* ป้ายผู้ตรวจ — แต่ละคนสีต่างกัน (คงที่ต่อชื่อ) เพื่อแยกผู้ตรวจได้ง่ายทั้งคอมและมือถือ */
 const TRAINER_PALETTE = ['#6D28D9','#0E7490','#B45309','#BE185D','#15803D','#1D4ED8','#9333EA','#C2410C','#0F766E','#7C3AED','#A16207','#DB2777'];
@@ -4374,7 +4612,7 @@ const Coverage = {
 
     const zones = [...new Set(fvMyBranches().map(b => b.bzm).filter(Boolean))]
       .sort((a,b) => a.localeCompare(b,'th'));
-    const TYPE_LABEL = { FQA:'FQA', FSQ:'Complaint', VISIT:'Visit' };
+    const TYPE_LABEL = { FQA:'FQA', FSQ:'Complaint', VISIT:'Visit', STA:'STA' };
 
     const badge = r => {
       if(r.state === 'never') return '<span class="pill p-fail">ยังไม่เคยเข้า</span>';
@@ -4483,7 +4721,7 @@ const Coverage = {
             <div class="fld"><label class="lbl">นับเฉพาะประเภท</label>
               <select class="inp" onchange="Coverage.setType(this.value)">
                 <option value="">ทุกประเภท</option>
-                ${['FQA','FSQ','VISIT'].filter(t=>Brand.has(t)).map(t => `<option value="${t}"${this.type===t?' selected':''}>${TYPE_LABEL[t]}</option>`).join('')}
+                ${['FQA','FSQ','VISIT','STA'].filter(t=>Brand.has(t)).map(t => `<option value="${t}"${this.type===t?' selected':''}>${TYPE_LABEL[t]}</option>`).join('')}
               </select></div>
             <div class="fld"><label class="lbl">สถานะ</label>
               <select class="inp" onchange="Coverage.setState(this.value)">
@@ -4672,7 +4910,8 @@ const Plan = {
           <option value="">ทุกประเภท</option>
           <option value="FQA" ${this.fType==='FQA'?'selected':''}>FQA</option>
           <option value="FSQ" ${this.fType==='FSQ'?'selected':''}>Complaint</option>
-          <option value="VISIT" ${this.fType==='VISIT'?'selected':''}>Visit</option></select>
+          <option value="VISIT" ${this.fType==='VISIT'?'selected':''}>Visit</option>
+          <option value="STA" ${this.fType==='STA'?'selected':''}>STA</option></select>
       </div>
       <div class="tw">${ list.length
         ? `<table class="tb"><thead><tr><th>วันที่นัด</th><th>ประเภทการตรวจ</th><th>สาขา</th><th>ผู้ตรวจ</th><th></th></tr></thead><tbody>
@@ -4787,7 +5026,7 @@ const Plan = {
   },
   inspect(id){
     const p=DB.all().find(r=>r.id===id); if(!p) return;
-    const view = p.ptype==='FSQ'?'fsq' : p.ptype==='VISIT'?'visit' : 'fqa';
+    const view = p.ptype==='FSQ'?'fsq' : p.ptype==='VISIT'?'visit' : p.ptype==='STA'?'sta' : 'fqa';
     App.go(view);
     const d=Form.s; d.branch=p.branch; d.bzm=p.bzm||(M.branchOf(p.branch)||{}).bzm||''; if(p.trainer) d.trainer=p.trainer;
     Form.render(); App.toast('เปิดฟอร์ม'+(PLAN_TYPE[p.ptype]||'FQA')+'สำหรับ '+p.branch);
@@ -4922,6 +5161,31 @@ const PDF = {
       b+=sec('แนวทางการแก้ไข', tbl(
         [{h:'ปัญหาที่พบ',w:'22%'},{h:'การแก้ไขเบื้องต้น',w:'20%'},{h:'สาเหตุ',w:'19%'},{h:'การป้องกัน',w:'20%'},{h:'ข้อแนะนำ',w:'19%'}],
         (r.issues||[]).map(x=>`<tr><td>${esc(x.problem)}</td><td>${esc(x.immediate)}</td><td>${esc(x.cause)}</td><td>${esc(x.prevention)}</td><td>${esc(x.advice)}</td></tr>`)));
+    }
+    if(r.type==='STA'){
+      const sc=staScore(r);
+      b+=`<div class="pi-grid" style="padding:0;grid-template-columns:repeat(3,1fr);gap:11px 16px;margin-bottom:14px">
+        ${kv('คะแนนที่ได้', staNum(sc.got)+' / '+staNum(sc.total||sc.full))}${kv('คิดเป็น', staNum(sc.pct)+'%')}${kv('แบบฟอร์ม', STA_CODE)}</div>`;
+      STA_FORM.forEach(function(S){
+        const ss=staSectionScore(r,S);
+        const rows=[];
+        S.items.forEach(it=>it.parts.forEach(function(p,pi){
+          const key=it.no+'.'+p.k, v=(r.marks||{})[key];
+          const res = p.na? 'N/A' : v==='pass'?'ผ่าน' : v==='fail'?'ไม่ผ่าน' : v==='na'?'N/A' : '—';
+          rows.push(`<tr><td>${pi===0?esc(it.no):''}</td><td>${pi===0?esc(it.text):''}</td>
+            <td>${esc(p.who||'')}</td><td class="c">${p.na?'—':staNum(p.max)}</td>
+            <td class="c" style="color:${res==='ไม่ผ่าน'?'#D6142B':res==='ผ่าน'?'#0E9F6E':'#888'};font-weight:700">${esc(res)}</td>
+            <td>${esc(((r.notes||{})[key])||'')}</td></tr>`);
+        }));
+        b+=sec(`${S.name} — ได้ ${staNum(ss.got)}/${staNum(ss.full)}`, tbl(
+          [{h:'ข้อ',w:'7%'},{h:'หัวข้อการตรวจ',w:'36%'},{h:'ส่วนงาน',w:'15%'},{h:'เต็ม',w:'8%',c:1},{h:'ผล',w:'10%',c:1},{h:'บันทึกเพิ่มเติม',w:'24%'}], rows));
+      });
+      const vr=(r.verify||[]).filter(v=>(v.name||'').trim());
+      if(vr.length) b+=sec('ทวนสอบมาตรฐานการทำงาน (พนักงาน)', tbl(
+        [{h:'ส่วนงาน',w:'13%'},{h:'ชื่อ-นามสกุล',w:'20%'},{h:'ตำแหน่ง',w:'13%'},{h:'อายุงาน',w:'10%'},{h:'เรื่องที่ทวนสอบ',w:'22%'},{h:'ผล',w:'10%',c:1},{h:'ความเห็น',w:'12%'}],
+        vr.map(v=>`<tr><td>${esc(v.group)}</td><td>${esc(v.name)}</td><td>${esc(v.position)}</td><td>${esc(v.tenure)}</td>
+          <td>${esc(v.topic)}</td><td class="c">${esc(v.result)}</td><td>${esc(v.comment)}</td></tr>`)));
+      if((r.comment||'').trim()) b+=sec('สรุปของผู้ตรวจ', `<p class="pdftext">${esc(r.comment)}</p>`);
     }
     if(r.type==='VISIT'){
       b+=`<p style="margin:0 0 15px;font-size:13px"><span style="color:#999;font-weight:700">ประเภทการเข้า Visit: </span><b style="color:#111">${esc(visitTypeLabel(r))}</b></p>`;
@@ -5059,7 +5323,7 @@ const Report = {
   label(){
     const f=this.f, p=[];
     if(f.from||f.to) p.push(`${f.from||'เริ่มต้น'} ถึง ${f.to||'ปัจจุบัน'}`);
-    if(f.type)    p.push({FQA:'FQA',FSQ:'Complaint',VISIT:'Visit'}[f.type]||f.type);
+    if(f.type)    p.push({FQA:'FQA',FSQ:'Complaint',VISIT:'Visit',STA:'STA'}[f.type]||f.type);
     if(f.visit)   p.push(f.visit);
     if(f.branch)  p.push(f.branch);
     if(f.bzm)     p.push('เขต '+f.bzm);
@@ -5082,7 +5346,7 @@ const Report = {
     const host=document.getElementById('reportList'); if(!host) return;
     const list=this.filtered();
     if(!list.length){ host.innerHTML=`<div class="empty" style="padding:26px 16px"><div class="big">▤</div><h4>ไม่มีรายการตามตัวกรอง</h4><p>ปรับตัวกรองด้านบน</p></div>`; return; }
-    const TL={FQA:'FQA',FSQ:'Complaint',VISIT:'Visit'};
+    const TL={FQA:'FQA',FSQ:'Complaint',VISIT:'Visit',STA:'STA'};
     this.pruneSel();
     /* วาดทีละ 40 ใบ — เจ็ดสิบใบก็ยาวสองหมื่นห้าพันพิกเซลบนมือถือแล้ว
        "เลือกทั้งหมด" ยังหมายถึงทุกใบตามตัวกรอง ไม่ใช่แค่ที่วาดอยู่ (ดู selAll)
@@ -5151,7 +5415,7 @@ const Report = {
         <div class="fld"><label class="lbl">ประเภทการตรวจ</label>
           <select class="inp" onchange="Report.set('type',this.value)">
             <option value="">— ทั้งหมด —</option>
-            ${[['FQA','FQA'],['FSQ','Complaint'],['VISIT','Visit']].filter(p=>Brand.has(p[0]))
+            ${[['FQA','FQA'],['FSQ','Complaint'],['VISIT','Visit'],['STA','STA']].filter(p=>Brand.has(p[0]))
               .map(p=>`<option value="${p[0]}"${f.type===p[0]?' selected':''}>${p[1]}</option>`).join('')}
           </select></div>
         ${f.type==='VISIT' ? `<div class="fld"><label class="lbl">ประเภทการเข้า Visit</label>${sel('visit',M.list('visitTypes'),'— ทุกประเภท —')}</div>` : ''}
@@ -5188,8 +5452,10 @@ const IO = {
       'สาขา':r.branch,'ผู้จัดการเขต':r.bzm,'ผู้ตรวจ':r.trainer,
       'ประเภทการเข้า Visit':r.type==='VISIT'?visitTypeList(r).join(', '):'',
       'จำนวนประเด็นที่พบ':failCount(r),'สรุปสิ่งที่พบ':summaryLine(r),
+      'คะแนน STA':r.type==='STA'?staScore(r).got:'','คะแนนเต็ม STA':r.type==='STA'?(staScore(r).total||staScore(r).full):'',
+      'STA (%)':r.type==='STA'?staScore(r).pct:'',
       'จำนวนรูป':r.photos.length,'บันทึกเมื่อ':(r.createdAt||'').slice(0,19).replace('T',' ')}));
-    const fqaItem=[],fqaMenu=[],comp=[],visit=[];
+    const fqaItem=[],fqaMenu=[],comp=[],visit=[],sta=[],staVerify=[];
     rows.forEach(r=>{
       if(r.type==='FQA'){
         r.checks.forEach(c=>{ if(c.result||c.detail||c.fix) fqaItem.push({'เลขที่':r.id,'วันที่':r.date,'สาขา':r.branch,'ผู้จัดการเขต':r.bzm,'ผู้ตรวจ':r.trainer,
@@ -5201,11 +5467,26 @@ const IO = {
         'รายละเอียด Complaint':r.complaint,'เมนูที่เกี่ยวข้อง':r.menu,'ประเภท':/อื่น/.test(r.category)?(r.categoryOther||r.category):r.category,
         'ช่องทาง':r.channel,'ความรุนแรง':r.severity,'ปัญหาที่พบ':x.problem,'การแก้ไขเบื้องต้น':x.immediate,'สาเหตุ':x.cause,
         'แนวทางการป้องกัน':x.prevention,'ข้อแนะนำเพิ่มเติม':x.advice}));
+      if(r.type==='STA'){
+        STA_FORM.forEach(sec=>sec.items.forEach(it=>it.parts.forEach(p=>{
+          const key=it.no+'.'+p.k, v=(r.marks||{})[key];
+          sta.push({'เลขที่':r.id,'วันที่':r.date,'สาขา':r.branch,'ผู้จัดการเขต':r.bzm,'ผู้ตรวจ':r.trainer,
+            'หมวด':sec.name,'ข้อ':it.no,'หัวข้อการตรวจ':it.text,'ส่วนงาน':p.who||'',
+            'คะแนนเต็ม':p.na?'':p.max,
+            'ผล':p.na?'N/A':(v==='pass'?'ผ่าน':v==='fail'?'ไม่ผ่าน':v==='na'?'N/A':''),
+            'คะแนนที่ได้':(!p.na&&v==='pass')?p.max:((!p.na&&v==='fail')?0:''),
+            'บันทึกเพิ่มเติม':((r.notes||{})[key])||''});
+        })));
+        (r.verify||[]).filter(v=>(v.name||'').trim()).forEach(v=>staVerify.push({
+          'เลขที่':r.id,'วันที่':r.date,'สาขา':r.branch,'ผู้ตรวจ':r.trainer,
+          'ส่วนงาน':v.group,'ชื่อ-นามสกุล':v.name,'ตำแหน่ง':v.position,'อายุงาน':v.tenure,
+          'เรื่องที่ทวนสอบ':v.topic,'ผลการประเมิน':v.result,'ความคิดเห็นเพิ่มเติม':v.comment}));
+      }
       if(r.type==='VISIT') r.topics.forEach(x=>visit.push({'เลขที่':r.id,'วันที่':r.date,'สาขา':r.branch,'ผู้จัดการเขต':r.bzm,'ผู้ตรวจ':r.trainer,
         'ประเภทการเข้า Visit':visitTypeLabel(r),'หัวข้อการอบรม':x.topic,'ปัญหาที่พบ':x.problem,'ข้อแนะนำ':x.advice}));
     });
     const master=M.branches().map((b,i)=>({'ลำดับ':i+1,'สาขา':b.name,'ผู้จัดการเขต':b.bzm}));
-    return {summary,fqaItem,fqaMenu,comp,visit,master};
+    return {summary,fqaItem,fqaMenu,comp,visit,sta,staVerify,master};
   },
 
   exportXlsx(rows){
@@ -5218,7 +5499,9 @@ const IO = {
         ws['!cols']=Object.keys(arr[0]).map(k=>({wch:Math.min(46,Math.max(12,k.length+6))}));
         XLSX.utils.book_append_sheet(wb,ws,name); };
       add('สรุปรายการตรวจ',d.summary); add('FQA วัตถุดิบ',d.fqaItem); add('FQA เมนู',d.fqaMenu);
-      add('Complaint',d.comp); add('Visit',d.visit); add('ข้อมูลสาขา',d.master);
+      add('Complaint',d.comp); add('Visit',d.visit);
+      add('STA รายข้อ',d.sta); add('STA ทวนสอบพนักงาน',d.staVerify);
+      add('ข้อมูลสาขา',d.master);
       XLSX.writeFile(wb,`FQA_รายงานการตรวจสาขา_${this.bTag()}_${this.stamp()}.xlsx`);
       App.toast('ส่งออกไฟล์ Excel แล้ว');
     }).catch(e=>App.toast(e.message));
