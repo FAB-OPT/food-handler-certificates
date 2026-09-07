@@ -913,7 +913,7 @@ html[data-brand="santafe"] .btn.pri:hover{box-shadow:0 6px 16px color-mix(in srg
       <button class="nav" data-v="fqa" data-form="FQA"><span class="ic">✓</span> ฟอร์ม FQA</button>
       <button class="nav" data-v="fsq" data-form="FSQ"><span class="ic">!</span> FSQ กรณี Complaint</button>
       <button class="nav" data-v="visit" data-form="VISIT"><span class="ic">◎</span> ฟอร์ม Visit</button>
-      <button class="nav" data-v="sta" data-form="STA"><span class="ic">★</span> Store Training Audit</button>
+      <button class="nav" data-v="sta" data-form="STA"><span class="ic">◎</span> ฟอร์ม Visit</button>
 
       <div class="navgrp">รายงานและข้อมูล</div>
       <button class="nav" data-v="report"><span class="ic">📄</span> ออกรายงาน</button>
@@ -1242,7 +1242,7 @@ const LIST_META = {
   photoGroups:{label:'หมวดรูปประกอบ', note:''}
 };
 
-const TYPE_LABEL = {FQA:'ฟอร์ม FQA', FSQ:'FSQ กรณี Complaint', VISIT:'ฟอร์ม Visit', STA:'Store Training Audit'};
+const TYPE_LABEL = {FQA:'ฟอร์ม FQA', FSQ:'FSQ กรณี Complaint', VISIT:'ฟอร์ม Visit', STA:'ฟอร์ม Visit'};
 
 /* หมวดวัตถุดิบ — ใช้จัดกลุ่มในดรอปดาวน์ "สุ่มตรวจ" ของฟอร์ม FQA */
 const MAT_CAT = {
@@ -1276,7 +1276,7 @@ const BRANDS = {
     logo:'../icons/brand-santafe.png',   /* ป้ายจัตุรัสมุมมน — พอดีกล่องไอคอน ไม่เหลือพื้นขาวโผล่ */
     /* เข้าตรวจสาขาอย่างเดียว — สุ่มตรวจวัตถุดิบกับเคสร้องเรียนยังไม่ได้ใช้
        เพิ่มทีหลังได้โดยเติมชื่อฟอร์มลงในรายการนี้ ไม่ต้องแก้ที่อื่น */
-    forms:['VISIT','STA'],
+    forms:['STA'],
     /* หน้าตาชุดใหม่ (แถบตัวกรองเป็นชิป · กล่องภาพรวมกล่องเดียว · โทนหมึก)
        ผูกไว้กับแบรนด์ตรง ๆ ไม่ใช่เดาจากจำนวนฟอร์ม เพราะเป็นคนละเรื่องกัน
        เจ๊แดงยังใช้หน้าตาเดิมทุกอย่างจนกว่าจะสั่งเปลี่ยน */
@@ -2543,7 +2543,7 @@ const App = {
       {icon:'✓', label:'ฟอร์ม FQA', sub:'ตรวจวัตถุดิบและเมนู', run:()=>this.go('fqa'), v:'fqa', t:'FQA'},
       {icon:'!', label:'FSQ กรณี Complaint', sub:'บันทึกเคสร้องเรียน', run:()=>this.go('fsq'), v:'fsq', t:'FSQ'},
       {icon:'◎', label:'ฟอร์ม Visit', sub:'บันทึกการเข้าพบสาขา', run:()=>this.go('visit'), v:'visit', t:'VISIT'},
-      {icon:'★', label:'Store Training Audit', sub:'ตรวจการสอนงานและเอกสาร (96 คะแนน)', run:()=>this.go('sta'), v:'sta', t:'STA'}
+      {icon:'◎', label:'ฟอร์ม Visit', sub:'ตรวจการสอนงานและเอกสาร (96 คะแนน)', run:()=>this.go('sta'), v:'sta', t:'STA'}
     ].filter(it=>Brand.has(it.t) && fvCan(FV_VIEW_ACTION[it.v]));
     /* แบรนด์ที่ใช้ฟอร์มเดียว ไม่ต้องให้เลือก — กดปุ่มเพิ่มแล้วเข้าฟอร์มเลย */
     if(items.length===1) return items[0].run();
@@ -2587,7 +2587,7 @@ const App = {
       dash:'แดชบอร์ด', list:'รายการตรวจทั้งหมด',
       fqa:'แบบฟอร์มการตรวจ Food Quality Assurance (FQA)',
       fsq:'แบบฟอร์ม Food and Service Quality กรณี Complaint',
-      visit:'แบบฟอร์ม Visit', sta:'Store Training Audit (STA)', plan:'แผนการตรวจสาขา', report:'ออกรายงาน',
+      visit:'แบบฟอร์ม Visit', sta:'แบบฟอร์ม Visit', plan:'แผนการตรวจสาขา', report:'ออกรายงาน',
       coverage:'สรุปการเข้าตรวจสาขา',
       master:'จัดการฐานข้อมูล', io:'นำเข้าข้อมูล'
     }[v];
@@ -3799,7 +3799,7 @@ const Rec = {
   edit(id){ if(!canEdit()) return App.toast('เฉพาะแอดมิน / Support Team เท่านั้นที่แก้ไขได้');
     const r=DB.all().find(x=>x.id===id); if(!r) return;
     Form.pendingEdit=r;   // App.go จะส่งให้ Form.open เอง (โหมดแก้ไข — ไม่ถามทำต่อ · ซ่อนปุ่มล้างฟอร์ม)
-    App.go(r.type==='FQA'?'fqa':r.type==='FSQ'?'fsq':'visit'); },
+    App.go(r.type==='FQA'?'fqa':r.type==='FSQ'?'fsq':r.type==='STA'?'sta':'visit'); },
   view(id){
     const r=DB.all().find(x=>x.id===id);
     const box=(t,b)=>`<div style="margin-bottom:18px"><h4 style="font-size:13.5px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">${t}</h4>${b}</div>`;
@@ -4672,7 +4672,7 @@ const Coverage = {
 
     const zones = [...new Set(fvMyBranches().map(b => b.bzm).filter(Boolean))]
       .sort((a,b) => a.localeCompare(b,'th'));
-    const TYPE_LABEL = { FQA:'FQA', FSQ:'Complaint', VISIT:'Visit', STA:'STA' };
+    const TYPE_LABEL = { FQA:'FQA', FSQ:'Complaint', VISIT:'Visit', STA:'Visit' };
 
     const badge = r => {
       if(r.state === 'never') return '<span class="pill p-fail">ยังไม่เคยเข้า</span>';
@@ -5382,7 +5382,7 @@ const Report = {
   label(){
     const f=this.f, p=[];
     if(f.from||f.to) p.push(`${f.from||'เริ่มต้น'} ถึง ${f.to||'ปัจจุบัน'}`);
-    if(f.type)    p.push({FQA:'FQA',FSQ:'Complaint',VISIT:'Visit',STA:'STA'}[f.type]||f.type);
+    if(f.type)    p.push({FQA:'FQA',FSQ:'Complaint',VISIT:'Visit',STA:'Visit'}[f.type]||f.type);
     if(f.visit)   p.push(f.visit);
     if(f.branch)  p.push(f.branch);
     if(f.bzm)     p.push('เขต '+f.bzm);
@@ -5405,7 +5405,7 @@ const Report = {
     const host=document.getElementById('reportList'); if(!host) return;
     const list=this.filtered();
     if(!list.length){ host.innerHTML=`<div class="empty" style="padding:26px 16px"><div class="big">▤</div><h4>ไม่มีรายการตามตัวกรอง</h4><p>ปรับตัวกรองด้านบน</p></div>`; return; }
-    const TL={FQA:'FQA',FSQ:'Complaint',VISIT:'Visit',STA:'STA'};
+    const TL={FQA:'FQA',FSQ:'Complaint',VISIT:'Visit',STA:'Visit'};
     this.pruneSel();
     /* วาดทีละ 40 ใบ — เจ็ดสิบใบก็ยาวสองหมื่นห้าพันพิกเซลบนมือถือแล้ว
        "เลือกทั้งหมด" ยังหมายถึงทุกใบตามตัวกรอง ไม่ใช่แค่ที่วาดอยู่ (ดู selAll)
@@ -5474,7 +5474,7 @@ const Report = {
         <div class="fld"><label class="lbl">ประเภทการตรวจ</label>
           <select class="inp" onchange="Report.set('type',this.value)">
             <option value="">— ทั้งหมด —</option>
-            ${[['FQA','FQA'],['FSQ','Complaint'],['VISIT','Visit'],['STA','STA']].filter(p=>Brand.has(p[0]))
+            ${[['FQA','FQA'],['FSQ','Complaint'],['VISIT','Visit'],['STA','Visit']].filter(p=>Brand.has(p[0]))
               .map(p=>`<option value="${p[0]}"${f.type===p[0]?' selected':''}>${p[1]}</option>`).join('')}
           </select></div>
         ${f.type==='VISIT' ? `<div class="fld"><label class="lbl">ประเภทการเข้า Visit</label>${sel('visit',M.list('visitTypes'),'— ทุกประเภท —')}</div>` : ''}
@@ -5511,8 +5511,8 @@ const IO = {
       'สาขา':r.branch,'ผู้จัดการเขต':r.bzm,'ผู้ตรวจ':r.trainer,
       'ประเภทการเข้า Visit':r.type==='VISIT'?visitTypeList(r).join(', '):'',
       'จำนวนประเด็นที่พบ':failCount(r),'สรุปสิ่งที่พบ':summaryLine(r),
-      'คะแนน STA':r.type==='STA'?staScore(r).got:'','คะแนนเต็ม STA':r.type==='STA'?(staScore(r).total||staScore(r).full):'',
-      'STA (%)':r.type==='STA'?staScore(r).pct:'',
+      'คะแนนที่ได้':r.type==='STA'?staScore(r).got:'','คะแนนเต็ม':r.type==='STA'?(staScore(r).total||staScore(r).full):'',
+      'คิดเป็น (%)':r.type==='STA'?staScore(r).pct:'',
       'จำนวนรูป':r.photos.length,'บันทึกเมื่อ':(r.createdAt||'').slice(0,19).replace('T',' ')}));
     const fqaItem=[],fqaMenu=[],comp=[],visit=[],sta=[],staVerify=[];
     rows.forEach(r=>{
@@ -5559,7 +5559,7 @@ const IO = {
         XLSX.utils.book_append_sheet(wb,ws,name); };
       add('สรุปรายการตรวจ',d.summary); add('FQA วัตถุดิบ',d.fqaItem); add('FQA เมนู',d.fqaMenu);
       add('Complaint',d.comp); add('Visit',d.visit);
-      add('STA รายข้อ',d.sta); add('STA ทวนสอบพนักงาน',d.staVerify);
+      add('Visit รายข้อ',d.sta); add('Visit ทวนสอบพนักงาน',d.staVerify);
       add('ข้อมูลสาขา',d.master);
       XLSX.writeFile(wb,`FQA_รายงานการตรวจสาขา_${this.bTag()}_${this.stamp()}.xlsx`);
       App.toast('ส่งออกไฟล์ Excel แล้ว');
