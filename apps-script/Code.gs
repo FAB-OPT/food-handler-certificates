@@ -1528,6 +1528,54 @@ var CKB_KEEP_DAYS = 400;
    ดีกว่าถูกตัดกลางคันจนได้ไฟล์ที่เขียนไม่จบ */
 var CKB_BUDGET_MS = 4.5 * 60 * 1000;
 
+/* ---------- สิทธิ์เข้า Firestore ----------
+
+   เดิมยิงด้วย apiKey เปล่า ๆ ซึ่งใช้ได้ตอนกฎยังเปิดให้ทุกคน
+   พอเปลี่ยนกฎเป็น "ต้องล็อกอินก่อน" คีย์เปล่าจะถูกปฏิเสธและการสำรองจะเงียบไปเฉย ๆ
+
+   ทางแก้คือใช้ service account เดียวกับที่สคริปต์ Telegram ใช้อยู่แล้ว
+   (Script properties: FB_CLIENT_EMAIL กับ FB_PRIVATE_KEY)
+   สิทธิ์ระดับเซิร์ฟเวอร์แบบนี้ไม่ติดกฎความปลอดภัย จึงสำรองได้ครบทุกคอลเลกชัน
+
+   ถ้ายังไม่ได้ตั้งค่านั้น จะถอยไปใช้ apiKey เหมือนเดิม — ยังทำงานได้จนกว่ากฎจะเปลี่ยน
+   ตรวจได้ด้วย checkChecklistBackup() ซึ่งจะบอกว่าตอนนี้ใช้ทางไหนอยู่
+   ---------------------------------------- */
+function _ckbToken() {
+  var props = PropertiesService.getScriptProperties();
+  var email = props.getProperty('FB_CLIENT_EMAIL');
+  var key = (props.getProperty('FB_PRIVATE_KEY') || '').replace(/[\\]n/g, String.fromCharCode(10));
+  if (!email || !key) return '';           /* ยังไม่ได้ตั้ง = ถอยไปใช้ apiKey */
+
+  var cache = CacheService.getScriptCache();       /* โทเคนอายุ 1 ชม. ขอใหม่ทุกครั้งเปลืองเวลา */
+  var hit = cache.get('ckb_token');
+  if (hit) return hit;
+
+  var now = Math.floor(Date.now() / 1000);
+  var enc = function (o) { return Utilities.base64EncodeWebSafe(JSON.stringify(o)).replace(/=+$/, ''); };
+  var toSign = enc({ alg: 'RS256', typ: 'JWT' }) + '.' + enc({
+    iss: email,
+    scope: 'https://www.googleapis.com/auth/datastore',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now, exp: now + 3600
+  });
+  var jwt = toSign + '.' + Utilities.base64EncodeWebSafe(
+    Utilities.computeRsaSha256Signature(toSign, key)).replace(/=+$/, '');
+
+  var res = UrlFetchApp.fetch('https://oauth2.googleapis.com/token', {
+    method: 'post', muteHttpExceptions: true,
+    payload: { grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }
+  });
+  var data = JSON.parse(res.getContentText() || '{}');
+  if (!data.access_token) throw new Error('ขอโทเคน service account ไม่สำเร็จ: ' + res.getContentText().slice(0, 200));
+  cache.put('ckb_token', data.access_token, 3300);
+  return data.access_token;
+}
+/* ต่อท้าย URL ด้วย apiKey เฉพาะตอนไม่มีโทเคน — มีโทเคนแล้วไม่ต้องใช้คีย์ */
+function _ckbAuth(url) {
+  var t = _ckbToken();
+  if (t) return { url: url, headers: { Authorization: 'Bearer ' + t } };
+  return { url: url + (url.indexOf('?') >= 0 ? '&' : '?') + 'key=' + CKB_KEY, headers: {} };
+}
 /* ---------- แปลงค่าจากรูปแบบของ Firestore เป็น JSON ธรรมดา ---------- */
 function _ckbDecode(v) {
   if (v === null || v === undefined) return null;
@@ -1549,8 +1597,9 @@ function _ckbQueryByDate(collection, dateStr) {
   var body = { structuredQuery: { from: [{ collectionId: collection }],
     where: { fieldFilter: { field: { fieldPath: 'date' }, op: 'EQUAL',
              value: { stringValue: dateStr } } } } };
-  var res = UrlFetchApp.fetch(CKB_BASE + ':runQuery?key=' + CKB_KEY, {
-    method: 'post', contentType: 'application/json',
+  var a = _ckbAuth(CKB_BASE + ':runQuery');
+  var res = UrlFetchApp.fetch(a.url, {
+    method: 'post', contentType: 'application/json', headers: a.headers,
     payload: JSON.stringify(body), muteHttpExceptions: true });
   if (res.getResponseCode() !== 200) throw new Error('Firestore ตอบ ' + res.getResponseCode() + ': ' + res.getContentText().slice(0, 200));
   var arr = JSON.parse(res.getContentText());
@@ -1567,9 +1616,10 @@ function _ckbQueryByDate(collection, dateStr) {
 function _ckbListAll(collection) {
   var out = [], token = '';
   for (var i = 0; i < 200; i++) {
-    var u = CKB_BASE + '/' + collection + '?pageSize=300&key=' + CKB_KEY +
+    var u = CKB_BASE + '/' + collection + '?pageSize=300' +
             (token ? '&pageToken=' + encodeURIComponent(token) : '');
-    var res = UrlFetchApp.fetch(u, { muteHttpExceptions: true });
+    var a = _ckbAuth(u);
+    var res = UrlFetchApp.fetch(a.url, { headers: a.headers, muteHttpExceptions: true });
     if (res.getResponseCode() !== 200) throw new Error(collection + ' ตอบ ' + res.getResponseCode());
     var j = JSON.parse(res.getContentText());
     (j.documents || []).forEach(function (d) {
@@ -1705,7 +1755,8 @@ function checkChecklistBackup() {
     ไฟล์ก้อนเล็ก: small.length ? small.join(', ') : 'ยังไม่มี',
     ขนาดรวม: (bytes / 1024 / 1024).toFixed(1) + ' MB',
     วันที่ไม่มีไฟล์: gaps.length ? (gaps.length + ' วัน: ' + gaps.join(', ')) : 'ไม่มี',
-    ตัวตั้งเวลา: 'ยังไม่ได้ตั้ง'
+    ตัวตั้งเวลา: 'ยังไม่ได้ตั้ง',
+    สิทธิ์ที่ใช้: (_ckbToken() ? 'service account (ผ่านกฎความปลอดภัยได้)' : 'apiKey (จะใช้ไม่ได้เมื่อล็อกกฎแล้ว)')
   };
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (t.getHandlerFunction() === 'backupChecklistDaily') out['ตัวตั้งเวลา'] = 'ตั้งแล้ว (ทุกวัน)';

@@ -2315,6 +2315,7 @@ input[type=file] { display:none; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 var HUB_FB_CONFIG = {
   apiKey: "AIzaSyB489GnLRLLL00a-5JhsGBn5y7W8STIGpI",
@@ -2325,7 +2326,27 @@ var HUB_FB_CONFIG = {
   appId: "1:501211065462:web:8f81f87357c21be1804357"
 };
 var hubDb = null;
-try { if (typeof firebase !== 'undefined') { firebase.initializeApp(HUB_FB_CONFIG); hubDb = firebase.firestore(); } }
+
+/* ล็อกอินแบบไม่ระบุตัวตน — ต้องมีก่อนกฎความปลอดภัยของ Firestore จะเปลี่ยนเป็น
+   "ต้องล็อกอินก่อน" ไม่งั้นประวัติการเข้าใช้งานจะเขียนไม่ลงเงียบ ๆ
+
+   _hubIdToken เก็บโทเคนไว้ล่วงหน้า เพราะตอนปิดแท็บ (_hubLogoutBeacon) ขอโทเคนใหม่ไม่ทัน
+   ต้องมีของพร้อมใช้ทันที onIdTokenChanged จะคอยเติมให้เองทุกชั่วโมงที่โทเคนหมุน */
+var _hubIdToken = '';
+var _hubAuthP = Promise.resolve(false);
+function hubAuthReady() { return _hubAuthP; }
+
+try { if (typeof firebase !== 'undefined') {
+  firebase.initializeApp(HUB_FB_CONFIG);
+  hubDb = firebase.firestore();
+  firebase.auth().onIdTokenChanged(function (u) {
+    if (!u) { _hubIdToken = ''; return; }
+    u.getIdToken().then(function (t) { _hubIdToken = t; }).catch(function () {});
+  });
+  _hubAuthP = firebase.auth().signInAnonymously()
+    .then(function () { return true; })
+    .catch(function (e) { console.warn('ล็อกอิน Firebase ไม่สำเร็จ', e && (e.code || e.message)); return false; });
+} }
 catch (e) { console.warn('Hub Firebase init failed', e); }
 </script>
 <!-- ชุดสี/ระยะ/เงา กลางของทุกระบบ — ต้องอยู่ "หลัง" <style> ของหน้านี้เสมอ
@@ -4335,12 +4356,20 @@ function logHubAccess() {
       branchCode: sv(s.branchCode), branchName: sv(s.branchName), device: sv(_hubDeviceStr()),
       menus: { arrayValue: { values: [] } }
     }});
-    fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function(){});
+    fetch(url, { method: 'PATCH', headers: _hubFbHeaders(), body: body, keepalive: true }).catch(function(){});
     _startIdleWatch();
   } catch (e) { console.warn('logHubAccess error', e); }
 }
+/* header สำหรับยิง Firestore REST ตรง — แนบโทเคนถ้ามี
+   ถ้ายังไม่มี (เพิ่งเปิดหน้า/ล็อกอินไม่ผ่าน) ก็ยังยิงได้เหมือนเดิม ตอนกฎยังเปิดอยู่ */
+function _hubFbHeaders() {
+  var h = { 'Content-Type': 'application/json' };
+  if (_hubIdToken) h['Authorization'] = 'Bearer ' + _hubIdToken;
+  return h;
+}
 /* บันทึกว่าเข้าเมนู/ระบบไหน + อัปเดตเวลาที่ยังใช้งานล่าสุด */
-function logHubMenu(name) {
+async function logHubMenu(name) {
+  await hubAuthReady();          // รอล็อกอิน Firebase ก่อนแตะข้อมูล
   try {
     if (!hubDb || !name) return;
     var id = _hubSessId(); if (!id) return;
@@ -4351,7 +4380,8 @@ function logHubMenu(name) {
   } catch (e) {}
 }
 /* บันทึกเวลาออกจากระบบ + ระยะเวลา */
-function logHubLogout() {
+async function logHubLogout() {
+  await hubAuthReady();          // รอล็อกอิน Firebase ก่อนแตะข้อมูล
   try {
     if (!hubDb) return;
     var id = _hubSessId(); if (!id) return;
@@ -4363,7 +4393,8 @@ function logHubLogout() {
   } catch (e) {}
 }
 /* กลับมาใช้งานต่อ — เคลียร์สถานะ "ออก" (logoutAt) ของเซสชันที่ยังอยู่ในแท็บนี้ */
-function _hubResumeSession() {
+async function _hubResumeSession() {
+  await hubAuthReady();          // รอล็อกอิน Firebase ก่อนแตะข้อมูล
   try {
     _hubNavApp = false;   // กลับมาที่หน้า Hub แล้ว = ใช้งานอยู่
     if (!hubDb) return;
@@ -4390,7 +4421,7 @@ function _hubLogoutBeacon() {
       lastActiveAt: { stringValue: now.toISOString() },
       durationSec: (dur == null ? { nullValue: null } : { integerValue: String(dur) })
     }});
-    fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function(){});
+    fetch(url, { method: 'PATCH', headers: _hubFbHeaders(), body: body, keepalive: true }).catch(function(){});
   } catch (e) {}
 }
 window.addEventListener('pagehide', _hubLogoutBeacon);
@@ -7078,7 +7109,8 @@ function closeAccessLogModal() {
   document.getElementById('accessLogModal').classList.remove('show');
   if (_accessLogUnsub) { try { _accessLogUnsub(); } catch(e){} _accessLogUnsub = null; }
 }
-function loadAccessLog() {
+async function loadAccessLog() {
+  await hubAuthReady();          // รอล็อกอิน Firebase ก่อนแตะข้อมูล
   var box = document.getElementById('accessLogList');
   if (!hubDb) { box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)">ยังไม่ได้เชื่อมต่อฐานข้อมูล</div>'; return; }
   if (_accessLogUnsub) { try { _accessLogUnsub(); } catch(e){} _accessLogUnsub = null; }
@@ -7185,7 +7217,8 @@ function toggleLogRow(i) {
   d.style.display = open ? 'none' : 'block';
   if (c) c.style.transform = open ? '' : 'rotate(90deg)';
 }
-function deleteAccessLogRow(id) {
+async function deleteAccessLogRow(id) {
+  await hubAuthReady();          // รอล็อกอิน Firebase ก่อนแตะข้อมูล
   if (!hubDb || !id) return;
   customConfirm({ icon:'🗑', title:'ลบรายการนี้?', desc:'ลบเซสชันนี้ออกจากประวัติถาวร', okText:'ลบ', cancelText:'ยกเลิก' }).then(function(ok){
     if (!ok) return;
@@ -7205,7 +7238,8 @@ function clearAllAccessLog() {
     _doClearAllAccessLog();
   });
 }
-function _doClearAllAccessLog() {
+async function _doClearAllAccessLog() {
+  await hubAuthReady();          // รอล็อกอิน Firebase ก่อนแตะข้อมูล
   var box = document.getElementById('accessLogList');
   box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)">กำลังลบ…</div>';
   hubDb.collection('hubAccessLog').get().then(function(snap){

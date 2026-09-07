@@ -21,6 +21,7 @@
 <!-- Firebase — เก็บ config กลางของ Food Handler (sync ทุกสาขา) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 var FH_FB_CONFIG = {
   apiKey: "AIzaSyB489GnLRLLL00a-5JhsGBn5y7W8STIGpI",
@@ -31,13 +32,26 @@ var FH_FB_CONFIG = {
   appId: "1:501211065462:web:8f81f87357c21be1804357"
 };
 var fhDb = null;
-try { if (typeof firebase !== 'undefined') { firebase.initializeApp(FH_FB_CONFIG); fhDb = firebase.firestore(); } }
+
+/* ล็อกอินแบบไม่ระบุตัวตน — ต้องมีก่อนกฎ Firestore จะเปลี่ยนเป็น "ต้องล็อกอินก่อน"
+   ไม่งั้น config กลางจะซิงก์ไม่ลง แล้วทุกสาขาจะเห็นค่าเริ่มต้นแทนของจริง */
+var _fhAuthP = Promise.resolve(false);
+function fhAuthReady() { return _fhAuthP; }
+
+try { if (typeof firebase !== 'undefined') {
+  firebase.initializeApp(FH_FB_CONFIG);
+  fhDb = firebase.firestore();
+  _fhAuthP = firebase.auth().signInAnonymously()
+    .then(function () { return true; })
+    .catch(function (e) { console.warn('ล็อกอิน Firebase ไม่สำเร็จ', e && (e.code || e.message)); return false; });
+} }
 catch (e) { console.warn('FH Firebase init failed', e); }
 
 // config กลาง (ค่าเริ่มต้น = เปิดรับ) — จะถูก override โดย fhConfig/settings บน cloud
 var FH_CONFIG = { submitOpen: true, schedules: null, branches: null, brands: null };
 
-function startFhConfigSync() {
+async function startFhConfigSync() {
+  await fhAuthReady();           // รอล็อกอิน Firebase ก่อนแตะข้อมูล
   if (!fhDb) { applyFhConfigUI(); return; }
   try {
     fhDb.collection('fhConfig').doc('settings').onSnapshot(function(snap){
@@ -54,7 +68,8 @@ function startFhConfigSync() {
     }, function(e){ console.warn('fhConfig sync error', e); applyFhConfigUI(); });
   } catch (e) { console.warn(e); applyFhConfigUI(); }
 }
-function saveFhConfig(patch) {
+async function saveFhConfig(patch) {
+  await fhAuthReady();           // รอล็อกอิน Firebase ก่อนแตะข้อมูล
   if (!fhDb) return Promise.reject(new Error('no db'));
   return fhDb.collection('fhConfig').doc('settings').set(patch, { merge: true });
 }
@@ -151,7 +166,8 @@ function _fhCertUrl(name, course) {
   }
   return '';
 }
-function saveFhCertFile(name, course, url) {
+async function saveFhCertFile(name, course, url) {
+  await fhAuthReady();           // รอล็อกอิน Firebase ก่อนแตะข้อมูล
   if (!fhDb || !name || !url) return;
   var key = _fhCertKey(name, course);
   try {
@@ -203,7 +219,8 @@ function _fhSplitStoreCerts(arrayBuffer, file, certs) {
     return chain;
   }).catch(function(e){ console.warn('split cert failed → fallback ทั้งไฟล์', e); _fhStoreCertFile(file, certs); });
 }
-function startFhCertFilesSync() {
+async function startFhCertFilesSync() {
+  await fhAuthReady();           // รอล็อกอิน Firebase ก่อนแตะข้อมูล
   if (!fhDb) return;
   try {
     fhDb.collection('fhCertFiles').onSnapshot(function(snap){

@@ -1,0 +1,72 @@
+rules_version = '2';
+
+/* ═══════════════════════════════════════════════════════════════════
+   กฎความปลอดภัยของ Firestore — โปรเจค checklist-a89e2
+
+   ของเดิมเปิดให้ทุกคนอ่านและเขียนได้ทุกอย่าง แปลว่าใครก็ตามที่เปิดหน้าเว็บ
+   แล้วก๊อป apiKey ออกไป (ซึ่งอยู่ในหน้าเว็บสาธารณะ ปิดไม่ได้) สามารถ
+   ดูดใบตรวจทั้งหมด 6,400 กว่าใบ หรือสั่งลบทิ้งทั้งฐานได้จากเทอร์มินัล
+
+   กฎชุดนี้ปิดสองอย่าง
+     1. ต้องล็อกอินกับ Firebase ก่อนถึงจะแตะข้อมูลได้ (แอปทำให้อัตโนมัติ)
+     2. ห้ามลบใบตรวจรายวันเด็ดขาด แม้แต่จากในแอป เพราะแอปไม่เคยลบอยู่แล้ว
+
+   ยังไม่ได้ปิด: การล็อกอินเป็นแบบไม่ระบุตัวตน ใครกดเข้าหน้าเว็บก็ได้สิทธิ์
+   เท่ากัน จึงยังไม่ใช่การแยกสิทธิ์รายคน (สาขา A ยังอ่านของสาขา B ได้)
+   ถ้าจะไปถึงขั้นนั้นต้องผูกรหัสพนักงานเข้ากับบัญชี Firebase จริง ซึ่งเป็น
+   งานคนละก้อน กฎชุดนี้แก้เรื่องที่ใหญ่กว่าและเร่งกว่าก่อน
+
+   ═══ ก่อนกดเผยแพร่ ต้องทำสามอย่างนี้ให้ครบ ═══
+   1. Firebase Console → Authentication → Sign-in method → เปิด "Anonymous"
+   2. เว็บสามหน้าที่แก้แล้ว ต้องขึ้นออนไลน์ก่อน:
+      Checklist/index.html · hub/index.html · hub/modules/food-handler.html
+   3. Apps Script สองตัว ต้องมี FB_CLIENT_EMAIL / FB_PRIVATE_KEY ใน
+      Script properties (ก๊อปจากสคริปต์ Telegram ที่ตั้งไว้แล้ว)
+      ไม่งั้นการสำรองข้อมูลอัตโนมัติกับบอทสรุปรายวันจะพังเงียบ ๆ
+
+   สลับกลับได้ทันทีถ้ามีปัญหา: Console → Firestore → Rules → Publish
+   กฎเดิม (allow read, write: if true) กลับไปใช้ได้ในไม่กี่วินาที
+   ═══════════════════════════════════════════════════════════════════ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    /* ผลตรวจเปิด-ปิดร้านรายวัน — ก้อนใหญ่ที่สุดและสำคัญที่สุด
+       แอปเขียนใบใหม่ (create) และแก้ใบเดิมภายในวัน (update) แต่ไม่เคยลบ
+       จึงปิดการลบไว้เลย กันทั้งคนไม่หวังดีและกันพลาดจากสคริปต์ของเราเอง */
+    match /dailyChecklists/{docId} {
+      allow read, create, update: if signedIn();
+      allow delete: if false;
+    }
+
+    /* ผลตรวจเจ๊แดง — แอดมินลบได้จากในแอป (ปุ่มลบรายงาน) จึงเปิดลบไว้ */
+    match /jaedaengAudits/{docId} {
+      allow read, write: if signedIn();
+    }
+
+    /* ผลตรวจชุดเก่า และสรุปรายเดือนที่แอปคำนวณแล้วเก็บไว้ */
+    match /audits/{docId}       { allow read, write: if signedIn(); }
+    match /dailySummary/{docId} { allow read, write: if signedIn(); }
+
+    /* ทะเบียนสาขา · หมายเหตุระบบ — แอดมินแก้จากในแอป */
+    match /appConfig/{docId} { allow read, write: if signedIn(); }
+
+    /* ประวัติการเข้าใช้งานฮับ — มีชื่อและสาขาของคนที่เข้า จึงไม่ควรเปิดสาธารณะ */
+    match /hubAccessLog/{docId} { allow read, write: if signedIn(); }
+
+    /* Food Handler — config กลาง และลิงก์ไฟล์ใบรับรอง */
+    match /fhConfig/{docId}    { allow read, write: if signedIn(); }
+    match /fhCertFiles/{docId} { allow read, write: if signedIn(); }
+
+    /* อย่างอื่นที่ยังไม่มีในรายการข้างบน ปิดไว้ก่อน
+       ถ้าวันหน้ามีคอลเลกชันใหม่แล้วแอปเขียนไม่ลง ให้มาเพิ่มบรรทัดที่นี่
+       ดีกว่าเปิดค้างไว้แล้วลืม */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
