@@ -1726,7 +1726,10 @@ function fvApplyPerms(){
     const act = FV_VIEW_ACTION[el.dataset.v];
     const form = el.getAttribute('data-form');
     const brandOk = !form || Brand.has(form);
-    el.style.display = (brandOk && (!act || fvCan(act))) ? '' : 'none';
+    /* จัดการฐานข้อมูลต้องเป็นแอดมินเท่านั้น ไม่ใช่แค่มีสิทธิ์จากฮับ
+       ต้องเช็คตรงนี้ด้วย เพราะบรรทัดล่างเขียน style ทับกฎ CSS ที่ซ่อนไว้ */
+    const adminOk = el.dataset.v !== 'master' || Hub.isAdmin();
+    el.style.display = (brandOk && adminOk && (!act || fvCan(act))) ? '' : 'none';
   });
   /* หัวข้อ "ตั้งค่า" โชว์เฉพาะเมื่อเมนูจัดการฐานข้อมูลใช้ได้ (เป็นแอดมิน + มีสิทธิ์) */
   const g=document.getElementById('navgrpSettings');
@@ -2596,9 +2599,13 @@ const App = {
   filters(id){ document.getElementById(id).classList.toggle('open'); },
 
   go(v){
-    if(v==='master'){
-      if(!Hub.isAdmin()){ this.toast('เฉพาะผู้ดูแลระบบเท่านั้นที่เข้าจัดการฐานข้อมูลได้'); v='dash'; }
-      else if(!Master.unlock()){ this.closeSheet(); return; }   // ต้องใส่รหัสก่อน — ยังไม่ผ่านก็อยู่หน้าเดิม
+    /* จัดการฐานข้อมูลคุมด้วยสิทธิ์อย่างเดียว ไม่มีรหัสอีกแล้ว
+       รหัสเดิมฝังอยู่ในหน้าเว็บสาธารณะ ใครกดดูโค้ดก็เห็น จึงกันได้แค่การกดพลาด
+       ไม่ได้กันคนจริง ๆ และยังต้องให้แอดมินจำเลขที่ไม่ได้ปกป้องอะไร
+       ตอนนี้ยึดสิทธิ์จากฮับที่เดียว เปลี่ยนคนได้จากฮับโดยไม่ต้องแก้โค้ด */
+    if(v==='master' && !Hub.isAdmin()){
+      this.toast('เฉพาะผู้ดูแลระบบเท่านั้นที่เข้าจัดการฐานข้อมูลได้');
+      v='dash';
     }
     /* กันเข้าหน้าที่ HUB ไม่ให้สิทธิ์ (เช่นพิมพ์ URL หรือกดจาก sheet) */
     if(v!=='dash' && !fvCan(FV_VIEW_ACTION[v])){
@@ -3883,17 +3890,10 @@ const Rec = {
    MASTER DATA EDITOR
    ======================================================================= */
 /* รหัสเข้า "จัดการฐานข้อมูล" — เปลี่ยนได้ที่บรรทัดนี้ (ค่าเริ่มต้น 2580) */
-const MASTER_PIN = '2580';
+
 const Master = {
   cur:'branch',
-  /* ต้องเป็นแอดมิน + ใส่รหัสให้ถูก (ปลดล็อกครั้งเดียวต่อการเปิดแอป) */
-  unlock(){
-    try{ if(sessionStorage.getItem('fqa_master_ok')==='1') return true; }catch(e){}
-    const p=prompt('ใส่รหัสเพื่อเข้าจัดการฐานข้อมูล');
-    if(p===null) return false;
-    if(p===MASTER_PIN){ try{ sessionStorage.setItem('fqa_master_ok','1'); }catch(e){} return true; }
-    App.toast('รหัสไม่ถูกต้อง'); return false;
-  },
+
   tab(t){ this.cur=t; document.querySelectorAll('#mTabs .mtab').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); this.render(); },
   statBar(){
     const el=document.getElementById('mStat'); if(!el) return;
