@@ -29,6 +29,59 @@ function _fhDedupKey(n) {
     .toLowerCase();
 }
 
+/* รวมแถวที่ชื่ออ่านมาไม่ครบ เข้ากับแถวที่ชื่อเต็มกว่า
+
+   ใช้หลังตัดซ้ำแบบเทียบชื่อเท่ากันแล้ว เพื่อเก็บกวาดข้อมูลเก่าที่ OCR อ่านขาด
+   เช่น "เบญจมาภรณ์ อินยิ" กับ "เบญจมาภรณ์ อินยิ่ม" ซึ่งเป็นคนเดียวกัน
+   ทั้งคู่หลักสูตรเดียวกันและหมดอายุวันเดียวกัน
+
+   ทำเป็นขั้นแยกจากคีย์ตัดซ้ำ เพราะ "เป็นส่วนหน้าของกัน" เทียบเป็นคู่ไม่ได้
+   ด้วยการทำคีย์ตัวเดียว ต้องไล่เทียบกันในกลุ่ม
+
+   เงื่อนไขครบสามข้อถึงจะรวม: หลักสูตรเดียวกัน · หมดอายุวันเดียวกัน ·
+   ชื่อสั้นเป็นส่วนหน้าของชื่อยาวและยาวอย่างน้อย 8 ตัวอักษร
+   ที่ต้องเข้มขนาดนี้เพราะรวมผิดแปลว่าใบของใครคนหนึ่งหายไปจากระบบ */
+var FH_TRUNC_MIN = 8;
+function _fhMergeTruncated(list) {
+  if (!Array.isArray(list) || list.length < 2) return list || [];
+  var groups = {};
+  list.forEach(function (d) {
+    var k = (d.course || '') + '|' + (typeof fhDayKey === 'function' ? fhDayKey(d.expireDate) : (d.expireDate || ''));
+    (groups[k] = groups[k] || []).push(d);
+  });
+  var drop = [];
+  Object.keys(groups).forEach(function (k) {
+    var g = groups[k];
+    if (g.length < 2) return;
+    /* เรียงชื่อยาวไปสั้น แล้วให้ตัวสั้นหาว่าตัวเองเป็นส่วนหน้าของตัวยาวหรือเปล่า */
+    g.sort(function (a, b) { return _fhDedupKey(b.certName).length - _fhDedupKey(a.certName).length; });
+    for (var i = g.length - 1; i > 0; i--) {
+      var shortKey = _fhDedupKey(g[i].certName || '');
+      if (shortKey.length < FH_TRUNC_MIN) continue;
+      for (var j = 0; j < i; j++) {
+        var longKey = _fhDedupKey(g[j].certName || '');
+        if (longKey.length <= shortKey.length) continue;
+        if (longKey.indexOf(shortKey) !== 0) continue;
+        /* ยกของที่มีค่าจากแถวที่จะทิ้ง ไปให้แถวที่เก็บไว้
+           โดยเฉพาะการจับคู่ที่คนนั่งทำเอง หายไปแล้วต้องทำใหม่ทั้งหมด */
+        var keep = g[j], gone = g[i];
+        if (!keep.empId && gone.empId) { keep.empId = gone.empId; keep.idCard = keep.idCard || gone.idCard || ''; }
+        if (!keep.branchAtTrain && gone.branchAtTrain) keep.branchAtTrain = gone.branchAtTrain;
+        if (!keep.empName && gone.empName) keep.empName = gone.empName;
+        if (gone.matchBy === 'manual' && keep.matchBy !== 'manual') {
+          keep.matchBy = 'manual';
+          if (gone.empId) keep.empId = gone.empId;
+          keep.empName = gone.empName || keep.empName;
+          if (keep.matchType === 'notfound') keep.matchType = gone.matchType || keep.matchType;
+        }
+        drop.push(gone);
+        break;
+      }
+    }
+  });
+  if (!drop.length) return list;
+  return list.filter(function (d) { return drop.indexOf(d) < 0; });
+}
 /* ตัดข้อความเอกสาร/หลักสูตร ที่ OCR กวาดมาต่อท้ายนามสกุล (ไม่มีช่องว่างคั่น)
    เช่น "สมพงษ์ จันดำการสุขาภิบาลอาหาร" → "สมพงษ์ จันดำ" */
 function _cleanCertName(nm){
@@ -457,7 +510,7 @@ function processMatch() {
       }
       _mseen[k] = d; _merged.push(d);
     });
-    matchData = _merged;
+    matchData = _fhMergeTruncated(_merged);   // เก็บกวาดชื่อที่ OCR อ่านขาด
     _canonicalizeBranches(matchData);   // รวมชื่อสาขาที่สะกดต่างเล็กน้อยให้เป็นอันเดียว
     var nMatched = raw.filter(function(d){ return d.matchType !== 'notfound'; }).length;
     // Renumber

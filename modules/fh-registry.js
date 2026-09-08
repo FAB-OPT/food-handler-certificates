@@ -685,7 +685,7 @@ function loadFromCloud() {
         var k = _ckey(d) + '|' + fhDayKey(d.expireDate);        // ตัดซ้ำ (รองรับ renewal คนละวัน)
         if (seen[k]) return; seen[k] = true; out.push(d);
       });
-      matchData = out;
+      matchData = _fhMergeTruncated(out);   // เก็บกวาดชื่อที่ OCR อ่านขาด
     })();
     console.log('[DIAG LOAD] หลัง map+filter+dedup → matchData = ' + matchData.length);
     _canonicalizeBranches(matchData);   // รวมชื่อสาขาที่สะกดต่างเล็กน้อยให้เป็นอันเดียว
@@ -783,7 +783,7 @@ function fhSyncFromSheets() {
         }
         byKey[k] = d; out.push(d); added++;
       });
-      matchData = out;
+      matchData = _fhMergeTruncated(out);   // เก็บกวาดชื่อที่ OCR อ่านขาด
       matchData.forEach(function(d, i){ d.no = i + 1; });
       var rl = (typeof _fhRelinkCerts === 'function') ? _fhRelinkCerts() : { linked: 0 };
       try { updateStats(); renderTable(); } catch (e) {}
