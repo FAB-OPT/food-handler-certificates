@@ -12,6 +12,23 @@ function normalizeName(n) {
     .replace(/\s+([ัิ-ฺ็-๎])/g, '$1')
     .replace(/\s+/g, ' ').trim();
 }
+/* คีย์ชื่อสำหรับ "ตัดซ้ำ" เท่านั้น ไม่ใช่ชื่อที่เอาไปแสดง
+
+   OCR อ่านวรรณยุกต์กับทัณฑฆาตตกหล่นบ่อย ใบเดียวกันสแกนสองรอบจึงได้
+   "สุดารัตน์ โมคศักดิ์" กับ "สุดารัตน์ โมคศักดิ" (ตัว ์ หายไปตัวเดียว)
+   คีย์เดิมเทียบตัวอักษรตรง ๆ เลยนับเป็นคนละคน แล้วขึ้นสองแถวในตาราง
+
+   ตัดวรรณยุกต์ทิ้งตอนเทียบ ใช้เกณฑ์เดียวกับที่คีย์ชื่อสาขาใช้อยู่แล้ว
+   ปลอดภัยเพราะตัวตัดซ้ำเทียบ "หลักสูตร + วันหมดอายุ" ด้วยเสมอ
+   คนละคนที่ชื่อต่างกันแค่วรรณยุกต์ และอบรมหลักสูตรเดียวกัน
+   หมดอายุวันเดียวกันพอดี แทบไม่มีทางเกิด */
+function _fhDedupKey(n) {
+  return normalizeName(n)
+    .replace(/\s+/g, '')
+    .replace(/[\u0E47-\u0E4E]/g, '')   // ็ ่ ้ ๊ ๋ ์ ํ ๎
+    .toLowerCase();
+}
+
 /* ตัดข้อความเอกสาร/หลักสูตร ที่ OCR กวาดมาต่อท้ายนามสกุล (ไม่มีช่องว่างคั่น)
    เช่น "สมพงษ์ จันดำการสุขาภิบาลอาหาร" → "สมพงษ์ จันดำ" */
 function _cleanCertName(nm){
@@ -409,7 +426,7 @@ function processMatch() {
     // (กันของเดิมหายตอน save ทับ · ใบใหม่ทับข้อมูลเดิมของคนเดิมได้ ถ้า key เดียวกัน)
     var totalPdf = raw.length;
     var _prev = Array.isArray(matchData) ? matchData : [];
-    var _ck = function(d){ return normalizeName(d.certName||'').replace(/\s+/g,'') + '|' + (d.course||''); };
+    var _ck = function(d){ return _fhDedupKey(d.certName||'') + '|' + (d.course||''); };
     var _mkey = function(d){ return _ck(d) + '|' + fhDayKey(d.expireDate); };
     var _hasExp = function(d){ return !!(d.expireDate && String(d.expireDate).trim()); };
     // ชื่อ+หลักสูตร ที่ "ใบใหม่" อ่านวันหมดอายุได้แล้ว → ใช้ทับใบเก่าที่วันว่าง

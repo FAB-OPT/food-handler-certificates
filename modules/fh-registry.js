@@ -675,7 +675,7 @@ function loadFromCloud() {
     // ตัดซ้ำ + ทิ้งใบ "วันว่าง" ถ้ามีใบ "มีวันหมดอายุ" ของคน+หลักสูตรเดียวกัน
     // (ใช้ชื่อ normalize แล้ว กัน OCR อ่านช่องว่าง/อักขระต่างกันเล็กน้อยแล้วนับเป็นคนละใบ)
     (function(){
-      var _ckey = function(d){ return normalizeName(d.certName||'').replace(/\s+/g,'') + '|' + (d.course||''); };
+      var _ckey = function(d){ return _fhDedupKey(d.certName||'') + '|' + (d.course||''); };
       var _hasExp = function(d){ return !!(d.expireDate && String(d.expireDate).trim()); };
       var datedGroups = {};
       matchData.forEach(function(d){ if (_hasExp(d)) datedGroups[_ckey(d)] = true; });
